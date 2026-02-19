@@ -39,4 +39,4 @@ docker run --rm \
 
 # Ejecutar migraciones
 ./vendor/bin/sail artisan migrate
-Desarrollado por Gerardo Medina Técnico Analista en Diseño de Software
+Desarrollado por  [Gerardo Medina](https://https://www.linkedin.com/in/gerardomedinav/) ** Técnico Analista en Diseño de Software**
