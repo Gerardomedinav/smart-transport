@@ -1,5 +1,5 @@
 # 🚛 Smart Transport - Smart City Platform
-
+Desarrollado por [Gerardo Medina](https://www.linkedin.com/in/gerardomedinav/) **Técnico Analista en Diseño de Software**
 **Smart Transport** es un sistema de monitoreo y gestión de transporte urbano desarrollado bajo estándares de grado empresarial. El proyecto se enfoca en la trazabilidad inmutable de activos, optimización de logística y preparación para integración con Smart Contracts.
 
 ## 🛠️ Stack Tecnológico
@@ -39,4 +39,4 @@ docker run --rm \
 
 # Ejecutar migraciones
 ./vendor/bin/sail artisan migrate
-Desarrollado por  [Gerardo Medina](https://https://www.linkedin.com/in/gerardomedinav/) ** Técnico Analista en Diseño de Software**
+
