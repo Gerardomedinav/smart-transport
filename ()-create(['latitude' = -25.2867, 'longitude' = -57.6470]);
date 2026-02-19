@@ -1,0 +1,11 @@
+[90m= [39m[34;4mApp\Models\Trip[39;24m {#5383
+    [34mid[39m: "[32md9b9e8dc-5313-4e0e-8d18-ac6c69f9d47d[39m",
+    [34mvehicle_id[39m: "[32md6113fc8-b34e-4da2-b279-a6dfbf3b3e54[39m",
+    [34mstart_time[39m: "[32m2026-02-19 02:09:03[39m",
+    [34mend_time[39m: [36mnull[39m,
+    [34mstatus[39m: "[32min_progress[39m",
+    [34mdeleted_at[39m: [36mnull[39m,
+    [34mcreated_at[39m: "[32m2026-02-19 02:09:04[39m",
+    [34mupdated_at[39m: "[32m2026-02-19 02:09:04[39m",
+  }
+
