@@ -40,3 +40,4 @@ docker run --rm \
 # Ejecutar migraciones
 ./vendor/bin/sail artisan migrate
 
+ 
