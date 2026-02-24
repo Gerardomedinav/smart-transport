@@ -6,21 +6,21 @@ use App\Models\Location;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast; // <--- VITAL
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class LocationUpdated implements ShouldBroadcast
+class LocationUpdated implements ShouldBroadcastNow // <--- Agregá "Now" al final
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $location;
 
-    public function __construct(Location $location)
-    {
-        // Pasamos el modelo de localización que acabamos de guardar
-        $this->location = $location;
-    }
-
+public function __construct(Location $location)
+{
+    // Esto es lo que saca el mapa del estado "Sincronizando"
+    $this->location = $location->load('trip.vehicle');
+}
     public function broadcastOn(): array
     {
         // Canal público para que cualquier Dashboard de monitoreo lo escuche
@@ -29,9 +29,5 @@ class LocationUpdated implements ShouldBroadcast
         ];
     }
 
-    public function broadcastAs(): string
-    {
-        // Nombre del evento que escucharemos en React
-        return 'location.updated';
-    }
+ public function broadcastAs(): string { return 'location.updated'; }
 }
