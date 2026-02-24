@@ -1,22 +1,24 @@
 import { Head, Link } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
+import WelcomeLoader from '@/Components/WelcomeLoader';
+import WelcomeNavbar from '@/Components/WelcomeNavbar';
 
 export default function Welcome({ auth }) {
     const [darkMode, setDarkMode] = useState(false);
-    const [isLoading, setIsLoading] = useState(true); // Estado para el Loader
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Manejo de Modo Nocturno
+        // Sincronización del tema visual
         if (darkMode) {
             document.documentElement.classList.add('dark');
         } else {
             document.documentElement.classList.remove('dark');
         }
 
-        // Simulación de carga de componentes y recursos
+        // Control del estado de carga inicial
         const timer = setTimeout(() => {
             setIsLoading(false);
-        }, 2500); // 2.5 segundos para apreciar la animación
+        }, 2500);
 
         return () => clearTimeout(timer);
     }, [darkMode]);
@@ -27,6 +29,7 @@ export default function Welcome({ auth }) {
         <>
             <Head title="Smart Transport - Control de Flotas" />
             
+            {/* Definición global de animaciones core */}
             <style>
                 {`
                     @keyframes bus-entry {
@@ -43,74 +46,34 @@ export default function Welcome({ auth }) {
                 `}
             </style>
 
-            {/* Pantalla de Carga (Loader) con Círculo Giratorio */}
-            {isLoading && (
-                <div className={`fixed inset-0 z-[100] flex flex-col items-center justify-center transition-colors duration-500 ${darkMode ? 'bg-slate-900' : 'bg-white'}`}>
-                    <div className="relative flex items-center justify-center mb-8">
-                        {/* Círculo Giratorio de Carga */}
-                        <div className={`absolute w-32 h-32 border-4 border-t-blue-600 border-r-transparent border-b-blue-600 border-l-transparent rounded-full animate-spin`}></div>
-                        
-                        {/* Logo Central Pulsante */}
-                        <div className="animate-pulse-logo relative z-10">
-                            <svg fill={darkMode ? "#60a5fa" : "#190075"} height="80px" width="80px" viewBox="0 0 32 32">
-                                <path d="M32,18.9l-0.8-6.2c-0.2-1.5-1.5-2.6-3-2.6H1c-0.6,0-1,0.4-1,1v13c0,0.6,0.4,1,1,1h3.2c0.4,1.2,1.5,2,2.8,2 c1,0,2-0.5,2.5-1.3C10,26.5,11,27,12,27c1.3,0,2.4-0.8,2.8-2h7.4c0.4,1.2,1.5,2,2.8,2s2.4-0.8,2.8-2H31c0.6,0,1-0.4,1-1v-5 C32,19,32,18.9,32,18.9z M28.2,12c0.5,0,0.9,0.4,1,0.9l0.6,5.1h-1c-1.6,0-3-0.6-4.1-1.7C24.5,16.1,24.3,16,24,16H2v-4H28.2z M7,25 c-0.6,0-1-0.4-1-1c0,0,0,0,0,0s0,0,0,0c0-0.6,0.4-1,1-1c0.6,0,1,0.4,1,1S7.6,25,7,25z M12,25c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1 S12.6,25,12,25z M25,25c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1S25.6,25,25,25z"></path>
-                            </svg>
-                        </div>
-                    </div>
-                    <p className={`text-sm font-bold tracking-widest uppercase animate-pulse ${darkMode ? 'text-blue-400' : 'text-blue-900'}`}>
-                        Sincronizando Flota Smart...
-                    </p>
-                </div>
-            )}
+            {/* Componente 1: Pantalla de carga independiente */}
+            {isLoading && <WelcomeLoader darkMode={darkMode} />}
 
             <div className={`min-h-screen transition-colors duration-500 ${darkMode ? 'bg-slate-900 text-white' : 'bg-white text-gray-900'} font-sans ${isLoading ? 'overflow-hidden' : ''}`}>
                 
-                {/* Navbar Moderna */}
-                <nav className={`fixed top-0 w-full z-50 border-b transition-colors duration-500 ${darkMode ? 'bg-slate-900/80 border-slate-800' : 'bg-white/80 border-gray-100'} backdrop-blur-md`}>
-                    <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-                        
-                        {/* Logo con Animación de Entrada de Colectivo (Lateral) */}
-                        {!isLoading && (
-                            <div className="flex items-center gap-3 animate-bus">
-                                <div className="p-1 rounded-lg">
-                                    <svg fill={darkMode ? "#60a5fa" : "#190075"} height="45px" width="45px" viewBox="0 0 32 32">
-                                        <path d="M32,18.9l-0.8-6.2c-0.2-1.5-1.5-2.6-3-2.6H1c-0.6,0-1,0.4-1,1v13c0,0.6,0.4,1,1,1h3.2c0.4,1.2,1.5,2,2.8,2 c1,0,2-0.5,2.5-1.3C10,26.5,11,27,12,27c1.3,0,2.4-0.8,2.8-2h7.4c0.4,1.2,1.5,2,2.8,2s2.4-0.8,2.8-2H31c0.6,0,1-0.4,1-1v-5 C32,19,32,18.9,32,18.9z M28.2,12c0.5,0,0.9,0.4,1,0.9l0.6,5.1h-1c-1.6,0-3-0.6-4.1-1.7C24.5,16.1,24.3,16,24,16H2v-4H28.2z M7,25 c-0.6,0-1-0.4-1-1c0,0,0,0,0,0s0,0,0,0c0-0.6,0.4-1,1-1c0.6,0,1,0.4,1,1S7.6,25,7,25z M12,25c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1 S12.6,25,12,25z M25,25c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1S25.6,25,25,25z"></path>
-                                    </svg>
-                                </div>
-                                <span className={`text-xl font-black tracking-tight ${darkMode ? 'text-white' : 'text-blue-900'}`}>SmartTransport</span>
-                            </div>
-                        )}
+                {/* Componente 2: Barra de navegación refactorizada */}
+                <WelcomeNavbar 
+                    darkMode={darkMode} 
+                    toggleDarkMode={toggleDarkMode} 
+                    auth={auth} 
+                    isLoading={isLoading} 
+                />
 
-                        <div className="flex items-center gap-6">
-                            <button onClick={toggleDarkMode} className={`p-2 rounded-xl transition-all duration-300 ${darkMode ? 'bg-slate-800 text-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.2)]' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-                                {darkMode ? (
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707MA4 4 0 1112 8a4 4 0 018 0z" /></svg>
-                                ) : (
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
-                                )}
-                            </button>
-                            <div className="flex gap-4">
-                                {auth.user ? (
-                                    <Link href={route('dashboard')} className="text-sm font-semibold text-blue-600 hover:text-blue-700">Panel</Link>
-                                ) : (
-                                    <>
-                                        <Link href={route('login')} className={`text-sm font-semibold ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>Ingresar</Link>
-                                        <Link href={route('register')} className="bg-blue-600 text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-blue-700 transition">Comenzar</Link>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </nav>
-
-                {/* Hero Section con Video de Fondo */}
+                {/* Hero Section principal */}
                 <header className="relative min-h-[90vh] flex items-center overflow-hidden">
                     <div className="absolute inset-0 z-0">
-                        <video autoPlay muted loop playsInline className={`w-full h-full object-cover transition-opacity duration-1000 ${darkMode ? 'opacity-30 grayscale' : 'opacity-50'}`}>
+                        <video 
+                            autoPlay 
+                            muted 
+                            loop 
+                            playsInline 
+                            className={`w-full h-full object-cover transition-opacity duration-1000 ${darkMode ? 'opacity-30 grayscale' : 'opacity-50'}`}
+                        >
                             <source src="/images/formosa1.webm" type="video/webm" />
                         </video>
                         <div className={`absolute inset-0 ${darkMode ? 'bg-gradient-to-r from-slate-900 via-slate-900/60 to-transparent' : 'bg-gradient-to-r from-white via-white/60 to-transparent'}`}></div>
                     </div>
+
                     <div className="relative z-10 max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center w-full">
                         <div className="text-left">
                             <span className={`inline-block px-4 py-1.5 mb-6 text-sm font-bold tracking-wider uppercase rounded-full ${darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
@@ -133,7 +96,11 @@ export default function Welcome({ auth }) {
                         </div>
                         <div className="relative">
                             <div className={`absolute -top-20 -right-20 w-96 h-96 rounded-full blur-3xl opacity-50 ${darkMode ? 'bg-blue-900/40' : 'bg-blue-100'}`}></div>
-                            <img src="/images/imagen1.jpg" alt="Gestión de Flotas" className={`relative rounded-3xl shadow-2xl border-8 transition-colors duration-500 ${darkMode ? 'border-slate-800' : 'border-white'} object-cover h-[500px] w-full`} />
+                            <img 
+                                src="/images/imagen1.jpg" 
+                                alt="Gestión de Flotas" 
+                                className={`relative rounded-3xl shadow-2xl border-8 transition-colors duration-500 ${darkMode ? 'border-slate-800' : 'border-white'} object-cover h-[500px] w-full`} 
+                            />
                         </div>
                     </div>
                 </header>
