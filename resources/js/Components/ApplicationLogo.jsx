@@ -1,14 +1,57 @@
-export default function ApplicationLogo(props) {
+export default function ApplicationLogo({ className }) {
     return (
-        <svg
-            {...props}
-            viewBox="0 0 32 32"
-            xmlns="http://www.w3.org/2000/svg"
-            fill="currentColor" // Permite que el color cambie según las clases de Tailwind
-        >
-            <g>
-                <path d="M32,18.9l-0.8-6.2c-0.2-1.5-1.5-2.6-3-2.6H1c-0.6,0-1,0.4-1,1v13c0,0.6,0.4,1,1,1h3.2c0.4,1.2,1.5,2,2.8,2 c1,0,2-0.5,2.5-1.3C10,26.5,11,27,12,27c1.3,0,2.4-0.8,2.8-2h7.4c0.4,1.2,1.5,2,2.8,2s2.4-0.8,2.8-2H31c0.6,0,1-0.4,1-1v-5 C32,19,32,18.9,32,18.9z M28.2,12c0.5,0,0.9,0.4,1,0.9l0.6,5.1h-1c-1.6,0-3-0.6-4.1-1.7C24.5,16.1,24.3,16,24,16H2v-4H28.2z M7,25 c-0.6,0-1-0.4-1-1c0,0,0,0,0,0s0,0,0,0c0-0.6,0.4-1,1-1c0.6,0,1,0.4,1,1S7.6,25,7,25z M12,25c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1 S12.6,25,12,25z M25,25c-0.6,0-1-0.4-1-1s0.4-1,1-1s1,0.4,1,1S25.6,25,25,25z"></path>
-            </g>
-        </svg>
+        <div className={`relative flex flex-col items-center ${className}`}>
+            {/* Aumentamos la altura del viewBox de 220 a 240 para dar espacio en la base */}
+            <svg
+                viewBox="0 0 400 240"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-full h-full overflow-visible"
+            >
+                <style>
+                    {`
+                        @keyframes road-flow {
+                            from { stroke-dashoffset: 60; }
+                            to { stroke-dashoffset: 0; }
+                        }
+                        @keyframes headlight-glow {
+                            0%, 100% { filter: drop-shadow(0 0 5px #fbbf24); opacity: 0.8; }
+                            50% { filter: drop-shadow(0 0 15px #fbbf24); opacity: 1; }
+                        }
+                        .road-line { animation: road-flow 0.6s linear infinite; }
+                        .light-beam { animation: headlight-glow 2s ease-in-out infinite; }
+                    `}
+                </style>
+
+                {/* Carretera - Terminamos un poco antes del borde inferior */}
+                <path d="M160 120 L240 120 L360 210 L40 210 Z" fill="#0f172a" />
+                
+                <line 
+                    x1="200" y1="130" x2="200" y2="200" 
+                    stroke="white" 
+                    strokeWidth="4" 
+                    strokeDasharray="20, 20" 
+                    className="road-line" 
+                />
+
+                {/* Vehículo Frontal */}
+                <g transform="translate(165, 85)">
+                    <path d="M10 5 L60 5 L65 30 L5 30 Z" fill="#3b82f6" />
+                    <rect x="5" y="30" width="60" height="35" rx="5" fill="#2563eb" />
+                    <circle cx="15" cy="50" r="6" fill="#fbbf24" className="light-beam" />
+                    <circle cx="55" cy="50" r="6" fill="#fbbf24" className="light-beam" />
+                </g>
+
+                <defs>
+                    <linearGradient id="beamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.5" />
+                        <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+                    </linearGradient>
+                </defs>
+                
+                {/* Haces de luz con perspectiva frontal corregida */}
+                <path d="M175 135 L120 210 L180 210 L185 135 Z" fill="url(#beamGrad)" className="light-beam" />
+                <path d="M225 135 L220 210 L280 210 L225 135 Z" fill="url(#beamGrad)" className="light-beam" />
+            </svg>
+        </div>
     );
 }
