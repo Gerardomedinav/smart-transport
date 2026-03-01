@@ -20,25 +20,16 @@ export default function UpdateProfileInformation({
 
     const submit = (e) => {
         e.preventDefault();
-
         patch(route('profile.update'));
     };
 
     return (
         <section className={className}>
-            <header>
-                <h2 className="text-lg font-medium text-gray-900">
-                    Profile Information
-                </h2>
+            {/* Se eliminó el header redundante para limpiar la interfaz */}
 
-                <p className="mt-1 text-sm text-gray-600">
-                    Update your account's profile information and email address.
-                </p>
-            </header>
-
-            <form onSubmit={submit} className="mt-6 space-y-6">
+            <form onSubmit={submit} className="space-y-6">
                 <div>
-                    <InputLabel htmlFor="name" value="Name" />
+                    <InputLabel htmlFor="name" value="Nombre Completo" />
 
                     <TextInput
                         id="name"
@@ -48,13 +39,14 @@ export default function UpdateProfileInformation({
                         required
                         isFocused
                         autoComplete="name"
+                        placeholder="Ingrese su nombre"
                     />
 
                     <InputError className="mt-2" message={errors.name} />
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
+                    <InputLabel htmlFor="email" value="Correo Electrónico" />
 
                     <TextInput
                         id="email"
@@ -64,36 +56,36 @@ export default function UpdateProfileInformation({
                         onChange={(e) => setData('email', e.target.value)}
                         required
                         autoComplete="username"
+                        placeholder="usuario@gmail.com"
                     />
 
                     <InputError className="mt-2" message={errors.email} />
                 </div>
 
                 {mustVerifyEmail && user.email_verified_at === null && (
-                    <div>
-                        <p className="mt-2 text-sm text-gray-800">
-                            Your email address is unverified.
+                    <div className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-xl border border-yellow-200 dark:border-yellow-900/50">
+                        <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                            Su dirección de correo electrónico no está verificada.
                             <Link
                                 href={route('verification.send')}
                                 method="post"
                                 as="button"
-                                className="rounded-md text-sm text-gray-600 underline hover:text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                                className="ml-2 font-bold underline hover:text-yellow-900 dark:hover:text-yellow-100 focus:outline-none"
                             >
-                                Click here to re-send the verification email.
+                                Haga clic aquí para reenviar el correo de verificación.
                             </Link>
                         </p>
 
                         {status === 'verification-link-sent' && (
-                            <div className="mt-2 text-sm font-medium text-green-600">
-                                A new verification link has been sent to your
-                                email address.
+                            <div className="mt-2 text-sm font-black text-green-600 dark:text-green-400 uppercase tracking-tighter">
+                                ✓ Se ha enviado un nuevo enlace de verificación a su correo.
                             </div>
                         )}
                     </div>
                 )}
 
                 <div className="flex items-center gap-4">
-                    <PrimaryButton disabled={processing}>Save</PrimaryButton>
+                    <PrimaryButton disabled={processing}>Guardar Cambios</PrimaryButton>
 
                     <Transition
                         show={recentlySuccessful}
@@ -102,8 +94,8 @@ export default function UpdateProfileInformation({
                         leave="transition ease-in-out"
                         leaveTo="opacity-0"
                     >
-                        <p className="text-sm text-gray-600">
-                            Saved.
+                        <p className="text-sm font-bold text-green-600 dark:text-green-400 italic">
+                            ✓ Guardado.
                         </p>
                     </Transition>
                 </div>
