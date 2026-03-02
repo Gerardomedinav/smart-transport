@@ -14,11 +14,11 @@ class Trip extends Model
     protected $keyType = 'string';
 
     // ¡Agregamos los destinos aquí!
-    protected $fillable = [
-        'vehicle_id', 'start_time', 'end_time', 'status', 
-        'origin', 'destination', 'destination_lat', 'destination_lng'
-    ];
-
+ protected $fillable = [
+    'vehicle_id', 'start_time', 'end_time', 'status', 
+    'is_loaded', 'cargo_weight', // <-- AGREGAR ESTOS DOS
+    'origin', 'destination', 'destination_lat', 'destination_lng'
+];
     public function locations()
     {
         return $this->hasMany(Location::class);

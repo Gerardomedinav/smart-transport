@@ -29,9 +29,9 @@ class SimulateGPS extends Command
             ];
         }
 
-        while (true) {
+        while (!$this->shouldStop()) {
             foreach ($trips as $trip) {
-                // Refrescamos el viaje desde la BD por si cambió de estado
+                // Refrescamos el viaje desde la BD por si cambió de estado (ej: si le agregamos carga)
                 $trip->refresh();
                 $s = &$state[$trip->id];
                 $license = $trip->vehicle->license_plate;
@@ -45,12 +45,15 @@ class SimulateGPS extends Command
                 $targetLat = $trip->destination_lat;
                 $targetLng = $trip->destination_lng;
 
-                // Movemos el camión
+                // Movemos el camión matemáticamente
                 $s['lat'] += ($targetLat - $s['lat']) * 0.05;
                 $s['lng'] += ($targetLng - $s['lng']) * 0.05;
                 
-                // EVENTO 1: Consumo de nafta (V4 se queda sin nafta)
+                // ==================================================
+                // 🧠 EVENTO 1: CONSUMO INTELIGENTE DE COMBUSTIBLE
+                // ==================================================
                 if ($license === 'PQ 789 RS') {
+                    // El camión de Clorinda tiene el tanque roto, pierde 1.5% por ciclo
                     $s['fuel'] -= 1.5; 
                     if ($s['fuel'] <= 0) {
                         $s['fuel'] = 0;
@@ -58,10 +61,14 @@ class SimulateGPS extends Command
                         $this->error("⛽ [{$license}] Se ha quedado sin combustible.");
                     }
                 } else {
-                    $s['fuel'] -= 0.5;
+                    // Magia Matemática: Si tiene carga gasta el doble (0.8), si está vacío gasta normal (0.4)
+                    $consumptionRate = $trip->is_loaded ? 0.8 : 0.4;
+                    $s['fuel'] -= $consumptionRate;
                 }
 
-                // EVENTO 2: Avería a mitad de camino (V3 - El Colorado)
+                // ==================================================
+                // 🚨 EVENTO 2: AVERÍA (V3 - El Colorado)
+                // ==================================================
                 if ($license === 'XY 456 ZW' && $trip->status !== 'AVERIA') {
                     $distLat = abs($targetLat - $s['lat']);
                     if ($distLat < 0.06) { 
@@ -70,7 +77,9 @@ class SimulateGPS extends Command
                     }
                 }
 
-                // LLEGADA A DESTINO
+                // ==================================================
+                // 🏁 LLEGADA A DESTINO
+                // ==================================================
                 $distLatFinal = abs($targetLat - $s['lat']);
                 $distLngFinal = abs($targetLng - $s['lng']);
                 if ($distLatFinal < 0.005 && $distLngFinal < 0.005) {
@@ -80,7 +89,7 @@ class SimulateGPS extends Command
                     $this->info("🏁 [{$license}] HA LLEGADO A DESTINO.");
                 }
 
-                // Si sigue en ruta, transmite en movimiento
+                // Si sigue en ruta y no pasó nada de lo anterior, transmite en movimiento
                 if ($trip->status === 'EN_RUTA') {
                     $speed = rand(70, 85);
                     $this->broadcastLocation($trip, $s, $speed, false);
@@ -88,6 +97,14 @@ class SimulateGPS extends Command
             }
             sleep(2);
         }
+
+        $this->info('✅ Simulación de GPS finalizada.');
+        return 0;
+    }
+
+    private function shouldStop()
+    {
+        return false; // Set this to true when you want to stop the command
     }
 
     private function broadcastLocation($trip, $state, $speed, $isStopped)
@@ -101,7 +118,7 @@ class SimulateGPS extends Command
             'is_stopped' => $isStopped,
         ]);
 
-        // AL DISPARAR EL EVENTO, REVERB LLEVARÁ EL $trip->status ACTUALIZADO
+        // AL DISPARAR EL EVENTO, REVERB LLEVARÁ EL $trip->status ACTUALIZADO HACIA REACT
         broadcast(new LocationUpdated($location));
         
         $statusStr = $isStopped ? "🛑 DETENIDO ({$trip->status})" : "⚡ {$speed}km/h";

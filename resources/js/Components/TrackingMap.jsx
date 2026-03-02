@@ -101,11 +101,13 @@ export default function TrackingMap() {
                         fuel: parseFloat(loc.fuel_level),
                         is_stopped: loc.is_stopped,
                         trip_status: loc.trip.status,
-                        // 🧠 AQUÍ AGREGAMOS LA CIUDAD DE SALIDA (ORIGEN) LEYÉNDOLA DEL BACKEND
+                        // 🧠 DATOS DE RUTA Y CARGA LEYÉNDOLOS DEL BACKEND
                         origin: loc.trip.origin || 'Desconocido',
                         destination: loc.trip.destination || 'Sin destino',
                         destLat: parseFloat(loc.trip.destination_lat),
-                        destLng: parseFloat(loc.trip.destination_lng)
+                        destLng: parseFloat(loc.trip.destination_lng),
+                        is_loaded: loc.trip.is_loaded,
+                        cargo_weight: parseFloat(loc.trip.cargo_weight)
                     }
                 }));
             }
@@ -159,13 +161,23 @@ export default function TrackingMap() {
                                     </h3>
                                     
                                     <div className="space-y-1.5 mt-3 px-2">
-                                        {/* 📍 AQUI DIBUJAMOS LA CIUDAD DE SALIDA EN EL POPUP */}
+                                        {/* 📍 SALIDA Y DESTINO */}
                                         <p className="text-xs font-bold text-gray-700 flex justify-between">
                                             <span>🚀 Salida:</span> <span style={{ color: vehicleColor }}>{v.origin}</span>
                                         </p>
                                         <p className="text-xs font-bold text-gray-700 flex justify-between">
                                             <span>🏁 Destino:</span> <span style={{ color: vehicleColor }}>{v.destination}</span>
                                         </p>
+
+                                        {/* 📦 INDICADOR DE CARGA VISUAL */}
+                                        <p className="text-xs font-bold text-gray-700 flex justify-between bg-slate-100 p-1.5 rounded my-1 border border-slate-200">
+                                            <span>{v.is_loaded ? '📦 Carga:' : '🪹 Carga:'}</span> 
+                                            <span className={v.is_loaded ? 'text-amber-700 font-black' : 'text-gray-500 font-black'}>
+                                                {v.is_loaded ? `${v.cargo_weight.toFixed(1)} Ton` : 'Vacío'}
+                                            </span>
+                                        </p>
+
+                                        {/* ⏱️ MÉTRICAS DE TELEMETRÍA */}
                                         <p className="text-xs font-bold text-gray-700 flex justify-between">
                                             <span>📏 Restante:</span> <span>{distance.toFixed(1)} km</span>
                                         </p>
