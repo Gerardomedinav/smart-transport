@@ -13,11 +13,12 @@ class Trip extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['vehicle_id', 'start_time', 'end_time', 'status'];
+    // ¡Agregamos los destinos aquí!
+    protected $fillable = [
+        'vehicle_id', 'start_time', 'end_time', 'status', 
+        'origin', 'destination', 'destination_lat', 'destination_lng'
+    ];
 
-    /**
-     * Relación Enterprise: Un viaje tiene muchas localizaciones GPS.
-     */
     public function locations()
     {
         return $this->hasMany(Location::class);

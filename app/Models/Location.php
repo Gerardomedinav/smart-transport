@@ -12,8 +12,11 @@ class Location extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    // Importante: trip_id debe estar en fillable para permitir la creación masiva
-    protected $fillable = ['trip_id', 'latitude', 'longitude'];
+    // ¡Agregamos velocidad, nafta y parada aquí!
+    protected $fillable = [
+        'trip_id', 'latitude', 'longitude', 
+        'speed', 'fuel_level', 'is_stopped'
+    ];
 
     public function trip()
     {

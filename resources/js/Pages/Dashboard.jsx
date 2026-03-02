@@ -23,7 +23,7 @@ export default function Dashboard({ auth }) {
                         </p>
                     </div>
                     
-                    {/* BOTÓN MODO (Unificado, sin amarillo estridente) */}
+                    {/* BOTÓN MODO */}
                     <button 
                         onClick={() => setDarkMode(!darkMode)}
                         className={`group flex items-center gap-3 px-6 py-3 rounded-2xl font-black text-[10px] tracking-widest transition-all border shadow-lg active:scale-95
@@ -36,19 +36,20 @@ export default function Dashboard({ auth }) {
                 {/* Grid Operativo */}
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:min-h-[700px]">
                     
-                    {/* MAPA (Borde reactivo al modo) */}
+                    {/* MAPA */}
                     <div className={`lg:col-span-3 h-[450px] lg:h-full rounded-[2.5rem] overflow-hidden shadow-2xl border-4 transition-all duration-500
                         ${darkMode ? 'border-white/5 bg-slate-900' : 'border-white bg-white'}`}>
-                        <TrackingMap />
+                        {/* 🚀 AQUI SE CARGA EL MAPA Y SU SIMULADOR */}
+                        <TrackingMap /> 
                     </div>
 
-                    {/* ESTADÍSTICAS (Colores suavizados) */}
+                    {/* ESTADÍSTICAS LATERALES */}
                     <div className="lg:col-span-1 flex flex-col gap-6">
                         
-                        {/* Señal Reverb */}
+                        {/* Señal de Red */}
                         <div className={`p-8 rounded-[2rem] border transition-all duration-500 shadow-xl ${darkMode ? 'bg-blue-600/10 border-blue-500/20 text-white' : 'bg-white border-blue-100 text-slate-900'}`}>
                             <span className={`font-black text-[10px] uppercase tracking-widest italic ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                                Signal
+                                Signal Reverb
                             </span>
                             <div className="flex items-center mt-3 gap-3 text-left justify-start">
                                 <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
@@ -56,10 +57,11 @@ export default function Dashboard({ auth }) {
                             </div>
                         </div>
 
-                        {/* Unidades */}
+                        {/* Unidades Activas */}
                         <div className={`p-8 rounded-[2rem] border transition-all duration-500 shadow-xl ${darkMode ? 'bg-slate-900 border-white/5 text-white' : 'bg-white border-gray-200 text-slate-900'}`}>
                             <span className="text-gray-500 font-black text-[10px] uppercase tracking-widest">Activos</span>
-                            <p className={`text-6xl font-black italic mt-2 text-left ${darkMode ? 'text-blue-500' : 'text-blue-600'}`}>01</p>
+                            {/* Este "02" es estático por ahora, representa los 2 camiones de la simulación */}
+                            <p className={`text-6xl font-black italic mt-2 text-left ${darkMode ? 'text-blue-500' : 'text-blue-600'}`}>02</p>
                         </div>
 
                         {/* Botón Reporte */}
