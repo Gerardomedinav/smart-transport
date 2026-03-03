@@ -7,69 +7,39 @@ export default function Dashboard({ auth }) {
     const [darkMode, setDarkMode] = useState(true);
 
     return (
-        <AuthenticatedLayout user={auth.user} header="Monitoreo de Flota" darkMode={darkMode}>
-            <Head title="Panel de Control" />
+        <AuthenticatedLayout user={auth.user} header="Monitoreo" darkMode={darkMode}>
+            <Head title="Terminal" />
 
-            <div className={`p-4 lg:p-8 min-h-full transition-all duration-500 ${darkMode ? 'bg-slate-950' : 'bg-gray-100'}`}>
+            {/* Contenedor principal sin scroll, ocupando justo el espacio debajo del navbar */}
+            <div className={`p-2 lg:p-4 h-[calc(100vh-64px)] flex flex-col transition-all duration-500 overflow-hidden ${darkMode ? 'bg-slate-950' : 'bg-gray-100'}`}>
                 
-                {/* Header Superior y Botón de Modo */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                    <div>
-                        <h1 className={`text-3xl font-black tracking-tighter uppercase ${darkMode ? 'text-white' : 'text-slate-900'}`}>
-                            Terminal de Control
+                {/* Cabecera ultra compacta */}
+                <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-baseline gap-3">
+                        <h1 className={`text-lg lg:text-xl font-black tracking-tighter uppercase ${darkMode ? 'text-white' : 'text-slate-900'}`}>
+                            Terminal Global
                         </h1>
-                        <p className={`text-xs font-bold tracking-widest uppercase ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                        <p className={`text-[10px] font-bold tracking-widest uppercase hidden sm:block ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
                             Smart Transport - Formosa
                         </p>
                     </div>
                     
-                    {/* BOTÓN MODO */}
+                    {/* Botón Modo Oscuro reducido */}
                     <button 
                         onClick={() => setDarkMode(!darkMode)}
-                        className={`group flex items-center gap-3 px-6 py-3 rounded-2xl font-black text-[10px] tracking-widest transition-all border shadow-lg active:scale-95
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-md font-black text-[9px] tracking-widest transition-all border shadow-sm active:scale-95
                         ${darkMode ? 'bg-white/5 border-white/10 text-white hover:bg-white/10' : 'bg-white border-gray-200 text-slate-900 hover:bg-gray-50'}`}
                     >
-                        <span>{darkMode ? '☀️ MODO CLARO' : '🌙 MODO OSCURO'}</span>
+                        <span>{darkMode ? '☀️ CLARO' : '🌙 OSCURO'}</span>
                     </button>
                 </div>
 
-                {/* Grid Operativo */}
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:min-h-[700px]">
+                {/* 🚀 EL MAPA SE EXPANDE AL 100% DEL ESPACIO RESTANTE CON BORDES FINOS */}
+                <div className={`flex-1 w-full rounded-xl overflow-hidden shadow-lg border-2 transition-all duration-500
+                    ${darkMode ? 'border-white/10 bg-slate-900' : 'border-gray-300 bg-white'}`}>
                     
-                    {/* MAPA */}
-                    <div className={`lg:col-span-3 h-[450px] lg:h-full rounded-[2.5rem] overflow-hidden shadow-2xl border-4 transition-all duration-500
-                        ${darkMode ? 'border-white/5 bg-slate-900' : 'border-white bg-white'}`}>
-                        {/* 🚀 AQUI SE CARGA EL MAPA Y SU SIMULADOR */}
-                        <TrackingMap /> 
-                    </div>
+                    <TrackingMap /> 
 
-                    {/* ESTADÍSTICAS LATERALES */}
-                    <div className="lg:col-span-1 flex flex-col gap-6">
-                        
-                        {/* Señal de Red */}
-                        <div className={`p-8 rounded-[2rem] border transition-all duration-500 shadow-xl ${darkMode ? 'bg-blue-600/10 border-blue-500/20 text-white' : 'bg-white border-blue-100 text-slate-900'}`}>
-                            <span className={`font-black text-[10px] uppercase tracking-widest italic ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
-                                Signal Reverb
-                            </span>
-                            <div className="flex items-center mt-3 gap-3 text-left justify-start">
-                                <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
-                                <p className="text-2xl font-black italic uppercase tracking-tighter">En Línea</p>
-                            </div>
-                        </div>
-
-                        {/* Unidades Activas */}
-                        <div className={`p-8 rounded-[2rem] border transition-all duration-500 shadow-xl ${darkMode ? 'bg-slate-900 border-white/5 text-white' : 'bg-white border-gray-200 text-slate-900'}`}>
-                            <span className="text-gray-500 font-black text-[10px] uppercase tracking-widest">Activos</span>
-                            {/* Este "02" es estático por ahora, representa los 2 camiones de la simulación */}
-                            <p className={`text-6xl font-black italic mt-2 text-left ${darkMode ? 'text-blue-500' : 'text-blue-600'}`}>02</p>
-                        </div>
-
-                        {/* Botón Reporte */}
-                        <button className={`mt-auto p-6 rounded-[2rem] font-black text-xs uppercase tracking-widest transition-all shadow-xl border
-                            ${darkMode ? 'bg-blue-600 border-blue-500 text-white hover:bg-blue-500' : 'bg-slate-900 border-slate-800 text-white hover:bg-slate-800'}`}>
-                            Descargar Reporte
-                        </button>
-                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

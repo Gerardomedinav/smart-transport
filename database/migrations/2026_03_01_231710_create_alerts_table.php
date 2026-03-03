@@ -6,38 +6,25 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('alerts', function (Blueprint $table) {
-            // 1. Usamos UUID como clave primaria para mantener la coherencia
             $table->uuid('id')->primary();
+            $table->uuid('vehicle_id');
+            $table->uuid('trip_id')->nullable();
             
-            // 2. Claves foráneas también como UUID
-            $table->foreignUuid('vehicle_id')->constrained()->onDelete('cascade');
-            $table->foreignUuid('trip_id')->nullable()->constrained()->onDelete('cascade');
+            $table->string('type');
+            $table->string('message');
             
-            // 3. Tipificación y mensaje de la alerta
-            $table->string('type'); // Ej: 'LOW_FUEL', 'OVERSPEED', 'LONG_STOP'
-            $table->text('message');
+            $table->decimal('latitude', 10, 8);
+            $table->decimal('longitude', 11, 8);
             
-            // 4. Coordenadas exactas del incidente
-            $table->decimal('latitude', 10, 8)->nullable();
-            $table->decimal('longitude', 10, 8)->nullable();
+            $table->boolean('is_resolved')->default(false); 
             
-            // 5. Control de lectura en la Terminal de Formosa
-            $table->boolean('is_acknowledged')->default(false);
-            
-            // 6. Fechas de creación y actualización
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('alerts');
