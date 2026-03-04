@@ -171,18 +171,31 @@ class SimulateGPS extends Command
 
     // Función Helper para crear alertas más fácil y limpio
   // Función Helper para crear alertas más fácil y limpio
+// Función Helper para crear alertas
     private function crearAlerta($trip, $state, $tipo, $mensaje)
     {
+        $address = null;
+        
+        // 🚨 LISTA DE ALERTAS CRÍTICAS QUE REQUIEREN GEOCODIFICACIÓN (API)
+        $alertasCriticas = ['AVERIA', 'SIN_COMBUSTIBLE', 'PANICO', 'AUXILIO', 'GPS_APAGADO'];
+
+        if (in_array($tipo, $alertasCriticas)) {
+            $geocoder = new \App\Services\NominatimService();
+            // Traducimos coordenadas a nombre de ruta
+            $address = $geocoder->getAddress($state['lat'], $state['lng']);
+            $this->warn("🗺️ Traduciendo ubicación: {$address}"); // Log para que lo veas en la consola
+        }
+
         $alert = Alert::create([
             'vehicle_id' => $trip->vehicle_id,
             'trip_id' => $trip->id,
             'type' => $tipo,
             'message' => $mensaje,
             'latitude' => $state['lat'],
-            'longitude' => $state['lng']
+            'longitude' => $state['lng'],
+            'address' => $address // Guardamos la dirección en texto
         ]);
 
-        // 🚀 ¡AQUÍ ESTÁ LA MAGIA! Disparamos la alerta hacia el Frontend por Reverb
         broadcast(new \App\Events\AlertCreated($alert));
     }
 

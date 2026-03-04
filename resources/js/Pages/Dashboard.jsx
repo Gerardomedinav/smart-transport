@@ -11,7 +11,7 @@ export default function Dashboard({ auth }) {
             <Head title="Terminal" />
 
             {/* Contenedor principal sin scroll, ocupando justo el espacio debajo del navbar */}
-            <div className={`p-2 lg:p-4 h-[calc(100vh-64px)] flex flex-col transition-all duration-500 overflow-hidden ${darkMode ? 'bg-slate-950' : 'bg-gray-100'}`}>
+            <div className={`p-2 lg:p-4 h-[calc(100vh-64px)] flex flex-col transition-all duration-500 overflow-hidden ${darkMode ? 'bg-slate-700' : 'bg-gray-100'}`}>
                 
                 {/* Cabecera ultra compacta */}
                 <div className="flex justify-between items-center mb-2">

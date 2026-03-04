@@ -19,6 +19,7 @@ class Alert extends Model
         'message', 
         'latitude', 
         'longitude', 
+        'address',     // 📍 AQUÍ HABILITAMOS EL CAMPO PARA LA DIRECCIÓN EXACTA
         'is_resolved'
     ];
 
