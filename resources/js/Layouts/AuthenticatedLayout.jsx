@@ -24,9 +24,10 @@ export default function Authenticated({ user, header, children, darkMode }) {
                         </h2>
                     </div>
 
-                    {/* 🚀 NAVEGACIÓN COMO BOTONES VERTICALES */}
+                    {/* 🚀 NAVEGACIÓN COMO BOTONES VERTICALES SEGÚN ROL */}
                     <nav className="flex-1 px-6 space-y-3 mt-4 flex flex-col">
                         
+                        {/* MAPA EN VIVO: Visible para ambos */}
                         <Link 
                             href={route('dashboard')} 
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl font-black tracking-wide transition-all duration-200 w-full
@@ -36,24 +37,40 @@ export default function Authenticated({ user, header, children, darkMode }) {
                                 }`}
                         >
                             <span className="text-lg drop-shadow-sm">📍</span>
-                            <span>Mapa en Vivo</span>
+                            <span>{user?.role === 'conductor' ? 'Mi Vehículo' : 'Mapa en Vivo'}</span>
                         </Link>
                         
-                        <Link 
-                            href={route('analytics')} 
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-black tracking-wide transition-all duration-200 w-full
-                                ${route().current('analytics') 
-                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 border border-blue-500' 
-                                    : (darkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-white border border-transparent' : 'text-slate-600 hover:bg-gray-200 hover:text-slate-900 border border-transparent')
-                                }`}
-                        >
-                            <span className="text-lg drop-shadow-sm">📊</span>
-                            <span>Estadísticas</span>
-                        </Link>
+                        {/* ESTADÍSTICAS: Solo para Operarios */}
+                        {user?.role === 'operario' && (
+                            <Link 
+                                href={route('analytics')} 
+                                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-black tracking-wide transition-all duration-200 w-full
+                                    ${route().current('analytics') 
+                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 border border-blue-500' 
+                                        : (darkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-white border border-transparent' : 'text-slate-600 hover:bg-gray-200 hover:text-slate-900 border border-transparent')
+                                    }`}
+                            >
+                                <span className="text-lg drop-shadow-sm">📊</span>
+                                <span>Estadísticas</span>
+                            </Link>
+                        )}
+                        
+                        {/* GESTIÓN DE PERSONAL: Preparado para el futuro (Solo Operarios) */}
+                        {user?.role === 'operario' && (
+                            <Link 
+                                href="#" // Reemplazar con route('personal.index') cuando se cree
+                                className={`flex items-center gap-3 px-4 py-3 rounded-xl font-black tracking-wide transition-all duration-200 w-full
+                                    ${darkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-white border border-transparent' : 'text-slate-600 hover:bg-gray-200 hover:text-slate-900 border border-transparent'}`}
+                            >
+                                <span className="text-lg drop-shadow-sm">👥</span>
+                                <span>Gestión Personal</span>
+                            </Link>
+                        )}
                         
                         {/* Separador visual opcional */}
                         <div className={`my-2 mx-2 border-t ${darkMode ? 'border-slate-800' : 'border-gray-200'}`}></div>
 
+                        {/* MI PERFIL: Visible para ambos */}
                         <Link 
                             href={route('profile.edit')} 
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl font-black tracking-wide transition-all duration-200 w-full
@@ -76,7 +93,8 @@ export default function Authenticated({ user, header, children, darkMode }) {
                             </div>
                             <div className="flex-1 overflow-hidden text-left">
                                 <p className={`text-sm font-black truncate ${darkMode ? 'text-white' : 'text-slate-900'}`}>{user?.name}</p>
-                                <p className="text-[10px] text-blue-500 font-bold truncate uppercase tracking-tighter">{user?.email}</p>
+                                {/* 🚀 MOSTRAMOS EL ROL DEL USUARIO */}
+                                <p className="text-[9px] text-blue-500 font-black truncate uppercase tracking-widest">{user?.role}</p> 
                             </div>
                         </div>
                         <Link 

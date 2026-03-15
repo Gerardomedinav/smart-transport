@@ -4,14 +4,28 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Alert;
+use Illuminate\Support\Facades\Auth;
 
 class AlertController extends Controller
 {
     public function index(Request $request)
     {
         $query = Alert::with(['vehicle', 'trip'])->latest();
+        $user = Auth::user(); // 👈 Obtenemos el usuario actual
 
-        // 1. Filtro por Categoría
+        // 🛡️ SEGURIDAD RBAC: Si es conductor, SOLO ve sus propias alertas
+        if ($user->role === 'conductor') {
+            $query->where('vehicle_id', $user->vehicle_id);
+        } else {
+            // Si es operario, aplicamos el filtro manual del Sidebar (si existe)
+            if ($request->filled('vehicle') && $request->vehicle !== 'ALL') {
+                $query->whereHas('vehicle', function($q) use ($request) {
+                    $q->where('license_plate', $request->vehicle);
+                });
+            }
+        }
+
+        // Filtro por Categoría de Alerta (Lo usan ambos roles)
         if ($request->filled('type') && $request->type !== 'ALL') {
             switch ($request->type) {
                 case 'CRITICAL':
@@ -24,13 +38,6 @@ class AlertController extends Controller
                     $query->whereIn('type', ['SALIDA', 'LLEGADA_DESTINO']);
                     break;
             }
-        }
-
-        // 2. Filtro por Vehículo
-        if ($request->filled('vehicle') && $request->vehicle !== 'ALL') {
-            $query->whereHas('vehicle', function($q) use ($request) {
-                $q->where('license_plate', $request->vehicle);
-            });
         }
 
         return response()->json($query->paginate(15));

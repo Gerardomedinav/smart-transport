@@ -27,8 +27,8 @@ function MapResizeController({ isMaximized, isFeedOpen }) {
     return null;
 }
 
-// 👈 AQUÍ RECIBIMOS darkMode COMO PROPIEDAD
-export default function TrackingMap({ darkMode = false }) {
+// 🚀 RECIBIMOS authUser
+export default function TrackingMap({ darkMode = false, authUser }) {
     const [fleet, setFleet] = useState({});
     const [isFeedOpen, setIsFeedOpen] = useState(true);
     const [isMaximized, setIsMaximized] = useState(false);
@@ -84,6 +84,12 @@ export default function TrackingMap({ darkMode = false }) {
         channel.listen('.location.updated', (e) => {
             const loc = e.location; 
             if (loc && loc.trip && loc.trip.vehicle) {
+                
+                // 🛡️ FILTRO WEBSOCKET: Si es conductor, ignorar vehículos que no sean el suyo
+                if (authUser?.role === 'conductor' && authUser?.vehicle_id !== loc.trip.vehicle.id) {
+                    return; 
+                }
+
                 setFleet(prev => ({
                     ...prev,
                     [loc.trip.vehicle.id]: {
@@ -99,6 +105,12 @@ export default function TrackingMap({ darkMode = false }) {
 
         channel.listen('.alert.created', (e) => {
             const alertData = e.alert || e; 
+            
+            // 🛡️ FILTRO WEBSOCKET: Si es conductor, ignorar alertas de otros vehículos
+            if (authUser?.role === 'conductor' && authUser?.vehicle_id !== alertData.vehicle_id) {
+                return;
+            }
+
             const currentType = filterTypeRef.current;
             const currentVeh = filterVehicleRef.current;
 
@@ -114,7 +126,7 @@ export default function TrackingMap({ darkMode = false }) {
             }
         });
         return () => window.Echo.leave('fleet-monitoring');
-    }, []);
+    }, [authUser]); // 👈 Dependencia de authUser para asegurar que tome el filtro correcto
 
     const wrapperClasses = isMaximized 
         ? `fixed inset-0 z-[9999] w-screen h-screen flex ${darkMode ? 'bg-slate-900' : 'bg-gray-100'}` 
@@ -184,7 +196,7 @@ export default function TrackingMap({ darkMode = false }) {
                 page={page}
                 fetchAlerts={fetchAlerts}
                 hasMore={hasMore}
-                darkMode={darkMode} /* 👈 LE PASAMOS EL MODO OSCURO AL SIDEBAR */
+                darkMode={darkMode}
             />
             
         </div>
