@@ -1,12 +1,13 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\AlertController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request; // 👈 IMPORTANTE: Agregamos Request para leer los filtros
 use Inertia\Inertia;
-use App\Models\Alert;
 
+// 🖥️ Vistas de React (Frontend)
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -16,9 +17,10 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', function () { return Inertia::render('Dashboard'); })->name('dashboard');
+    Route::get('/analytics', function () { return Inertia::render('Analytics'); })->name('analytics');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -26,34 +28,10 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// 🚨 API de Auditoría Interactiva (Paginación + Filtros)
-Route::get('/api/alerts', function (Request $request) {
-    $query = Alert::with(['vehicle', 'trip'])->latest();
-
-    // 1. Filtro por Categoría de Alerta
-    if ($request->filled('type') && $request->type !== 'ALL') {
-        switch ($request->type) {
-            case 'CRITICAL':
-                $query->whereIn('type', ['AVERIA', 'SIN_COMBUSTIBLE', 'PANICO', 'AUXILIO', 'GPS_APAGADO']);
-                break;
-            case 'SPEED':
-                $query->where('type', 'EXCESO_VELOCIDAD');
-                break;
-            case 'ROUTE':
-                $query->whereIn('type', ['SALIDA', 'LLEGADA_DESTINO']);
-                break;
-        }
-    }
-
-    // 2. Filtro por Vehículo Específico (Patente)
-    if ($request->filled('vehicle') && $request->vehicle !== 'ALL') {
-        $query->whereHas('vehicle', function($q) use ($request) {
-            $q->where('license_plate', $request->vehicle);
-        });
-    }
-
-    // 3. Devolvemos resultados paginados (15 por página)
-    return response()->json($query->paginate(15));
-})->middleware(['auth']);
+// 🔌 APIs Internas (Backend)
+Route::middleware('auth')->prefix('api')->group(function () {
+    Route::get('/alerts', [AlertController::class, 'index']);
+    Route::get('/analytics', [AnalyticsController::class, 'getMetrics']);
+});
 
 require __DIR__.'/auth.php';

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import ApplicationLogo from '@/Components/ApplicationLogo';
-import NavLink from '@/Components/NavLink';
 import { Link } from '@inertiajs/react';
 
 export default function Authenticated({ user, header, children, darkMode }) {
@@ -25,23 +24,48 @@ export default function Authenticated({ user, header, children, darkMode }) {
                         </h2>
                     </div>
 
-                    {/* NAVEGACIÓN CON CONTRASTE CORREGIDO */}
-                    <nav className="flex-1 px-8 space-y-4">
-                        <NavLink 
-                            href={route('dashboard')} 
-                            active={route().current('dashboard')} 
-                            className={`transition-colors font-bold ${darkMode ? 'text-gray-300 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
-                        >
-                            <span className={darkMode ? 'text-white' : ''}>Panel de Control</span>
-                        </NavLink>
+                    {/* 🚀 NAVEGACIÓN COMO BOTONES VERTICALES */}
+                    <nav className="flex-1 px-6 space-y-3 mt-4 flex flex-col">
                         
-                        <NavLink 
-                            href={route('profile.edit')} 
-                            active={route().current('profile.edit')}
-                            className={`transition-colors font-bold ${darkMode ? 'text-gray-300 hover:text-white' : 'text-slate-600 hover:text-slate-900'}`}
+                        <Link 
+                            href={route('dashboard')} 
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-black tracking-wide transition-all duration-200 w-full
+                                ${route().current('dashboard') 
+                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 border border-blue-500' 
+                                    : (darkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-white border border-transparent' : 'text-slate-600 hover:bg-gray-200 hover:text-slate-900 border border-transparent')
+                                }`}
                         >
-                            <span className={darkMode ? 'text-white' : ''}>Mi Perfil</span>
-                        </NavLink>
+                            <span className="text-lg drop-shadow-sm">📍</span>
+                            <span>Mapa en Vivo</span>
+                        </Link>
+                        
+                        <Link 
+                            href={route('analytics')} 
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-black tracking-wide transition-all duration-200 w-full
+                                ${route().current('analytics') 
+                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 border border-blue-500' 
+                                    : (darkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-white border border-transparent' : 'text-slate-600 hover:bg-gray-200 hover:text-slate-900 border border-transparent')
+                                }`}
+                        >
+                            <span className="text-lg drop-shadow-sm">📊</span>
+                            <span>Estadísticas</span>
+                        </Link>
+                        
+                        {/* Separador visual opcional */}
+                        <div className={`my-2 mx-2 border-t ${darkMode ? 'border-slate-800' : 'border-gray-200'}`}></div>
+
+                        <Link 
+                            href={route('profile.edit')} 
+                            className={`flex items-center gap-3 px-4 py-3 rounded-xl font-black tracking-wide transition-all duration-200 w-full
+                                ${route().current('profile.edit') 
+                                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/30 border border-blue-500' 
+                                    : (darkMode ? 'text-slate-400 hover:bg-slate-800 hover:text-white border border-transparent' : 'text-slate-600 hover:bg-gray-200 hover:text-slate-900 border border-transparent')
+                                }`}
+                        >
+                            <span className="text-lg drop-shadow-sm">👤</span>
+                            <span>Mi Perfil</span>
+                        </Link>
+
                     </nav>
 
                     {/* Footer Perfil */}

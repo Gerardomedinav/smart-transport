@@ -4,11 +4,9 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import axios from 'axios';
 
-// 📦 Importamos nuestros submódulos
 import { getVehicleColor, calculateDistanceKm, calculateETA, formatAlertForUI } from './TrackingMap/Helpers';
 import AlertSidebar from './TrackingMap/AlertSidebar';
 
-// 🚚 CREADOR DE MARCADORES (Se mantiene aquí porque usa L.divIcon de Leaflet)
 const createCustomMarker = (vehicle, tripStatus, isStopped) => {
     const color = getVehicleColor(vehicle.license_plate);
     const svgCamion = `<svg viewBox="0 0 24 24" fill="currentColor" class="w-7 h-7"><path d="M3 4C1.89543 4 1 4.89543 1 6V17H3.0625C3.38501 18.705 4.87321 20 6.66667 20C8.46012 20 9.94833 18.705 10.2708 17H13.7292C14.0517 18.705 15.5399 20 17.3333 20C19.1268 20 20.615 18.705 20.9375 17H23V12L19 4H3ZM3 6H16V12H3V6ZM17 6L20 12H17V6ZM6.66667 15C5.74619 15 5 15.7462 5 16.6667C5 17.5871 5.74619 18.3333 6.66667 18.3333C7.58714 18.3333 8.33333 17.5871 8.33333 16.6667C8.33333 15.7462 7.58714 15 6.66667 15ZM17.3333 15C16.4128 15 15.6667 15.7462 15.6667 16.6667C15.6667 17.5871 16.4128 18.3333 17.3333 18.3333C18.2538 18.3333 19 17.5871 19 16.6667C19 15.7462 18.2538 15 17.3333 15Z"/></svg>`;
@@ -29,12 +27,12 @@ function MapResizeController({ isMaximized, isFeedOpen }) {
     return null;
 }
 
-export default function TrackingMap() {
+// 👈 AQUÍ RECIBIMOS darkMode COMO PROPIEDAD
+export default function TrackingMap({ darkMode = false }) {
     const [fleet, setFleet] = useState({});
     const [isFeedOpen, setIsFeedOpen] = useState(true);
     const [isMaximized, setIsMaximized] = useState(false);
     
-    // 🎛️ ESTADOS PARA LA INTERACTIVIDAD
     const [liveAlerts, setLiveAlerts] = useState([]);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(false); 
@@ -44,7 +42,6 @@ export default function TrackingMap() {
 
     const filterTypeRef = useRef(filterType);
     const filterVehicleRef = useRef(filterVehicle);
-    const abortControllerRef = useRef(null);
 
     const mapCenter = [-25.7324, -58.6086];
 
@@ -55,16 +52,11 @@ export default function TrackingMap() {
 
     const fetchAlerts = useCallback((pageNumber = 1, isReset = false) => {
         setIsLoading(true);
-        if (abortControllerRef.current) abortControllerRef.current.abort();
-        abortControllerRef.current = new AbortController();
 
         axios.get('/api/alerts', {
-            params: { page: pageNumber, type: filterType, vehicle: filterVehicle },
-            signal: abortControllerRef.current.signal 
+            params: { page: pageNumber, type: filterType, vehicle: filterVehicle }
         }).then(response => {
             const dataArray = Array.isArray(response.data.data) ? response.data.data : (Array.isArray(response.data) ? response.data : []);
-            
-            // 🧠 Usamos la función importada de Helpers.js
             const fetchedAlerts = dataArray.map(alert => formatAlertForUI(alert)).filter(Boolean);
             
             if (isReset) setLiveAlerts(fetchedAlerts); 
@@ -77,13 +69,13 @@ export default function TrackingMap() {
             
             setIsLoading(false);
         }).catch(err => { 
-            if (!axios.isCancel(err)) { console.error("Error API:", err); setIsLoading(false); }
+            console.error("Error cargando API:", err); 
+            setIsLoading(false); 
         });
     }, [filterType, filterVehicle]); 
 
     useEffect(() => { fetchAlerts(1, true); }, [fetchAlerts]);
 
-    // Extraemos la lista de vehículos para el desplegable del Sidebar
     const vehiclesList = Object.values(fleet).map(v => ({ license_plate: v.license_plate, model: v.model }));
 
     useEffect(() => {
@@ -117,7 +109,6 @@ export default function TrackingMap() {
             else if (currentType === 'ROUTE') passesType = ['SALIDA', 'LLEGADA_DESTINO'].includes(alertData.type);
 
             if (passesVehicle && passesType) {
-                // 🧠 Usamos la función importada de Helpers.js
                 const alertUI = formatAlertForUI(alertData);
                 if (alertUI) setLiveAlerts(prev => [alertUI, ...prev]);
             }
@@ -125,15 +116,16 @@ export default function TrackingMap() {
         return () => window.Echo.leave('fleet-monitoring');
     }, []);
 
-    const wrapperClasses = isMaximized ? "fixed inset-0 z-[9999] w-screen h-screen bg-slate-200 flex" : "h-full w-full bg-slate-200 relative overflow-hidden flex";
+    const wrapperClasses = isMaximized 
+        ? `fixed inset-0 z-[9999] w-screen h-screen flex ${darkMode ? 'bg-slate-900' : 'bg-gray-100'}` 
+        : `h-full w-full relative overflow-hidden flex ${darkMode ? 'bg-slate-900' : 'bg-gray-100'}`;
 
     return (
         <div className={wrapperClasses}>
             
-            {/* 🗺️ ZONA DEL MAPA */}
-            <div className="flex-1 relative h-full w-full flex flex-col">
+            <div className={`flex-1 relative h-full w-full flex flex-col ${darkMode ? 'bg-slate-900' : 'bg-gray-100'}`}>
                 <div className="absolute top-4 right-4 z-[500] flex gap-3">
-                    <button onClick={() => setIsMaximized(!isMaximized)} className="bg-slate-800 text-white px-4 py-2.5 rounded-lg font-black tracking-widest text-[10px] uppercase shadow-xl hover:bg-slate-700 transition-all active:scale-95 border border-slate-600 flex items-center gap-2">
+                    <button onClick={() => setIsMaximized(!isMaximized)} className={`px-4 py-2.5 rounded-lg font-black tracking-widest text-[10px] uppercase shadow-xl transition-all active:scale-95 border flex items-center gap-2 ${darkMode ? 'bg-slate-800 text-white border-slate-600 hover:bg-slate-700' : 'bg-white text-slate-800 border-gray-300 hover:bg-gray-50'}`}>
                         {isMaximized ? '🗗 Minimizar Mapa' : '🖵 Pantalla Completa'}
                     </button>
                     <button onClick={() => setIsFeedOpen(!isFeedOpen)} className={`text-white px-4 py-2.5 rounded-lg font-black tracking-widest text-[10px] uppercase shadow-xl transition-all active:scale-95 border flex items-center gap-2 ${isFeedOpen ? 'bg-blue-600 border-blue-500 hover:bg-blue-500' : 'bg-green-600 border-green-500 hover:bg-green-500'}`}>
@@ -147,7 +139,7 @@ export default function TrackingMap() {
                     </div>
                 )}
 
-                <MapContainer center={mapCenter} zoom={8} style={{ height: '100%', width: '100%' }} className="z-0 flex-1 border-r border-slate-300">
+                <MapContainer center={mapCenter} zoom={8} style={{ height: '100%', width: '100%', background: 'transparent' }} className={`z-0 flex-1 border-r ${darkMode ? 'border-slate-700' : 'border-gray-300'}`}>
                     <MapResizeController isMaximized={isMaximized} isFeedOpen={isFeedOpen} />
                     <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
                     {Object.values(fleet).map((v) => {
@@ -180,7 +172,6 @@ export default function TrackingMap() {
                 </MapContainer>
             </div>
 
-            {/* 📋 SIDEBAR LATERAL SEPARADO */}
             <AlertSidebar 
                 isFeedOpen={isFeedOpen}
                 vehiclesList={vehiclesList} 
@@ -193,6 +184,7 @@ export default function TrackingMap() {
                 page={page}
                 fetchAlerts={fetchAlerts}
                 hasMore={hasMore}
+                darkMode={darkMode} /* 👈 LE PASAMOS EL MODO OSCURO AL SIDEBAR */
             />
             
         </div>

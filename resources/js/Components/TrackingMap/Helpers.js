@@ -1,5 +1,3 @@
-// resources/js/Components/TrackingMap/Helpers.js
-
 export const BRAND_COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
 
 export const getVehicleColor = (licensePlate) => {
@@ -27,39 +25,44 @@ export const calculateETA = (distanceKm, speed) => {
     return `${hours}h ${minutes}m`;
 };
 
-// 🧠 FORMATEO DE ALERTA LIMPIO (Retorna variables para React, no HTML)
+// 🧠 FORMATEO DE ALERTA: Puros datos, cero CSS.
 export const formatAlertForUI = (newAlert) => {
     if (!newAlert) return null;
-    let bgColor = 'bg-blue-50'; let badgeStyle = 'bg-white border-blue-200 text-blue-600'; let cardStyle = 'border-blue-200';
     
-    const typeStr = newAlert.type || 'DESCONOCIDO'; 
-    const typeLabel = typeStr.replace('_', ' '); // 👈 Este es el texto que ahora SÍ se mostrará
-    let hasDangerIcon = false;
-
-    if (['AVERIA', 'PANICO', 'AUXILIO'].includes(typeStr)) { 
-        bgColor = 'bg-red-50'; cardStyle = 'border-red-500 shadow-md shadow-red-500/20'; badgeStyle = 'bg-red-600 text-white border-red-700 animate-pulse'; hasDangerIcon = true;
-    } 
-    else if (['SIN_COMBUSTIBLE', 'GPS_APAGADO'].includes(typeStr)) { 
-        bgColor = 'bg-orange-50'; cardStyle = 'border-orange-500 shadow-md shadow-orange-500/20'; badgeStyle = 'bg-orange-600 text-white border-orange-700 animate-pulse'; hasDangerIcon = true;
-    } 
-    else if (typeStr === 'EXCESO_VELOCIDAD') { 
-        bgColor = 'bg-amber-50'; cardStyle = 'border-amber-300'; badgeStyle = 'bg-amber-100 text-amber-700 border-amber-300'; 
-    } 
-    else if (['LLEGADA_DESTINO', 'SALIDA'].includes(typeStr)) { 
-        bgColor = 'bg-green-50'; cardStyle = 'border-green-200'; badgeStyle = 'bg-white text-green-600 border-green-200'; 
-    } 
+    const typeStr = newAlert.type || 'INFO'; 
+    const typeLabel = typeStr.replace(/_/g, ' '); 
+    
+    // Asignamos una categoría lógica
+    let category = 'INFO';
+    if (['AVERIA', 'PANICO', 'AUXILIO'].includes(typeStr)) category = 'CRITICAL';
+    else if (['SIN_COMBUSTIBLE', 'GPS_APAGADO'].includes(typeStr)) category = 'WARNING';
+    else if (typeStr === 'EXCESO_VELOCIDAD') category = 'SPEED';
+    else if (['LLEGADA_DESTINO', 'SALIDA'].includes(typeStr)) category = 'SUCCESS';
 
     const dateObj = newAlert.created_at ? new Date(newAlert.created_at) : new Date();
+    
+    // ⏱️ Cálculo de Retraso en Tiempo Real
+    let delayText = null;
+    if (newAlert.trip && newAlert.trip.delay_minutes > 0) {
+        const h = Math.floor(newAlert.trip.delay_minutes / 60);
+        const m = newAlert.trip.delay_minutes % 60;
+        delayText = h > 0 ? `${h}h ${m}m` : `${m} min`;
+    }
+
     return {
         id: newAlert.id || Math.random(), 
-        typeLabel: typeLabel,          // 👈 Pasamos el texto limpio
-        hasDangerIcon: hasDangerIcon,  // 👈 Pasamos el estado del icono
-        typeRaw: typeStr, 
-        message: newAlert.message || 'Sin mensaje',
+        typeLabel: typeLabel, 
+        category: category, 
+        message: newAlert.message || 'Alerta registrada sin mensaje.',
         date: dateObj.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
         time: dateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
-        badgeStyle, cardStyle, bg: bgColor, plate: newAlert.vehicle ? newAlert.vehicle.license_plate : 'Sin Patente',
-        model: newAlert.vehicle ? newAlert.vehicle.model : 'Desconocido', origin: newAlert.trip ? newAlert.trip.origin : 'N/D', destination: newAlert.trip ? newAlert.trip.destination : 'N/D',
-        address: newAlert.address || null, lat: parseFloat(newAlert.latitude || 0), lng: parseFloat(newAlert.longitude || 0)
+        plate: newAlert.vehicle ? newAlert.vehicle.license_plate : 'Sin Patente',
+        model: newAlert.vehicle ? newAlert.vehicle.model : 'Vehículo Desconocido', 
+        origin: newAlert.trip ? newAlert.trip.origin : 'No especificado', 
+        destination: newAlert.trip ? newAlert.trip.destination : 'No especificado',
+        address: newAlert.address || null, 
+        lat: parseFloat(newAlert.latitude || 0), 
+        lng: parseFloat(newAlert.longitude || 0),
+        delay: delayText
     };
 };
