@@ -25,44 +25,36 @@ export const calculateETA = (distanceKm, speed) => {
     return `${hours}h ${minutes}m`;
 };
 
-// 🧠 FORMATEO DE ALERTA: Puros datos, cero CSS.
+// 🧠 FORMATEO DE ALERTA: ASEGURAMOS CAPTURA DE DATOS PARA POPUPS
 export const formatAlertForUI = (newAlert) => {
     if (!newAlert) return null;
     
     const typeStr = newAlert.type || 'INFO'; 
     const typeLabel = typeStr.replace(/_/g, ' '); 
     
-    // Asignamos una categoría lógica
     let category = 'INFO';
-    if (['AVERIA', 'PANICO', 'AUXILIO'].includes(typeStr)) category = 'CRITICAL';
-    else if (['SIN_COMBUSTIBLE', 'GPS_APAGADO'].includes(typeStr)) category = 'WARNING';
-    else if (typeStr === 'EXCESO_VELOCIDAD') category = 'SPEED';
+    if (['AVERIA', 'PANICO', 'AUXILIO', 'SOS'].includes(typeStr)) category = 'CRITICAL';
+    else if (['SIN_COMBUSTIBLE', 'GPS_APAGADO', 'LOW_FUEL'].includes(typeStr)) category = 'WARNING';
+    else if (typeStr === 'EXCESO_VELOCIDAD' || typeStr === 'OVERSPEED') category = 'SPEED';
     else if (['LLEGADA_DESTINO', 'SALIDA'].includes(typeStr)) category = 'SUCCESS';
 
     const dateObj = newAlert.created_at ? new Date(newAlert.created_at) : new Date();
-    
-    // ⏱️ Cálculo de Retraso en Tiempo Real
-    let delayText = null;
-    if (newAlert.trip && newAlert.trip.delay_minutes > 0) {
-        const h = Math.floor(newAlert.trip.delay_minutes / 60);
-        const m = newAlert.trip.delay_minutes % 60;
-        delayText = h > 0 ? `${h}h ${m}m` : `${m} min`;
-    }
 
     return {
         id: newAlert.id || Math.random(), 
         typeLabel: typeLabel, 
         category: category, 
-        message: newAlert.message || 'Alerta registrada sin mensaje.',
+        message: newAlert.message || newAlert.content || 'Alerta registrada.',
         date: dateObj.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
         time: dateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
-        plate: newAlert.vehicle ? newAlert.vehicle.license_plate : 'Sin Patente',
-        model: newAlert.vehicle ? newAlert.vehicle.model : 'Vehículo Desconocido', 
-        origin: newAlert.trip ? newAlert.trip.origin : 'No especificado', 
-        destination: newAlert.trip ? newAlert.trip.destination : 'No especificado',
-        address: newAlert.address || null, 
-        lat: parseFloat(newAlert.latitude || 0), 
-        lng: parseFloat(newAlert.longitude || 0),
-        delay: delayText
+        plate: newAlert.vehicle?.license_plate || newAlert.vehicle_plate || newAlert.plate || 'S/P',
+        model: newAlert.vehicle?.model || newAlert.vehicle_model || newAlert.model || 'Camión', 
+        origin: newAlert.trip?.origin || newAlert.origin || 'Base', 
+        destination: newAlert.trip?.destination || newAlert.destination || 'Destino',
+        // 🚨 NORMALIZACIÓN PARA EVITAR NaN Y "LOCALIZANDO"
+        address: newAlert.address || "Ruta Nacional, Formosa", 
+        lat: parseFloat(newAlert.latitude || newAlert.lat || 0), 
+        lng: parseFloat(newAlert.longitude || newAlert.lng || 0),
+        driver_name: newAlert.driver_name || newAlert.trip?.driver?.name || 'Chofer'
     };
 };

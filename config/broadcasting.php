@@ -7,24 +7,20 @@ return [
     | Default Broadcaster
     |--------------------------------------------------------------------------
     |
-    | This option controls the default broadcaster that will be used by the
-    | framework when an event needs to be broadcast. You may set this to
-    | any of the connections defined in the "connections" array below.
-    |
-    | Supported: "reverb", "pusher", "ably", "redis", "log", "null"
+    | Esta opción controla el broadcaster por defecto. Para SmartTransport
+    | usamos 'reverb' según tu archivo .env.
     |
     */
 
-    'default' => env('BROADCAST_CONNECTION', 'null'),
+    'default' => env('BROADCAST_CONNECTION', 'reverb'),
 
     /*
     |--------------------------------------------------------------------------
     | Broadcast Connections
     |--------------------------------------------------------------------------
     |
-    | Here you may define all of the broadcast connections that will be used
-    | to broadcast events to other systems or over WebSockets. Samples of
-    | each available type of connection are provided inside this array.
+    | Aquí se definen todas las conexiones. Laravel ignorará las que están en 
+    | amarillo (Pusher, Ably) y se centrará únicamente en 'reverb'.
     |
     */
 
@@ -36,13 +32,16 @@ return [
             'secret' => env('REVERB_APP_SECRET'),
             'app_id' => env('REVERB_APP_ID'),
             'options' => [
-                'host' => env('REVERB_HOST'),
-                'port' => env('REVERB_PORT', 443),
-                'scheme' => env('REVERB_SCHEME', 'https'),
-                'useTLS' => env('REVERB_SCHEME', 'https') === 'https',
+                'host' => env('REVERB_HOST', '127.0.0.1'),
+                'port' => env('REVERB_PORT', 8081),
+                'scheme' => env('REVERB_SCHEME', 'http'),
+                'useTLS' => env('REVERB_SCHEME', 'http') === 'https',
             ],
             'client_options' => [
-                // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
+                // 🚀 OPTIMIZACIÓN VITAL PARA DOCKER:
+                // verify => false elimina la espera por certificados SSL inexistentes en local.
+                'verify' => false,
+                'timeout' => 3.0,
             ],
         ],
 
@@ -60,7 +59,7 @@ return [
                 'useTLS' => env('PUSHER_SCHEME', 'https') === 'https',
             ],
             'client_options' => [
-                // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
+                'verify' => false,
             ],
         ],
 
