@@ -6,86 +6,114 @@ use Illuminate\Http\Request;
 use App\Models\Trip;
 use App\Models\Alert;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 
 class AnalyticsController extends Controller
 {
     public function getMetrics(Request $request)
     {
-        $timeFilter = $request->query('time', 'HOY');
-        $location = $request->query('location', 'ALL');
+        try {
+            $time = $request->query('time', 'HOY');
+            $ranges = $this->resolveRanges($time);
+            $curr = $ranges['curr'];
+            $prev = $ranges['prev'];
 
-        $queryTrips = Trip::with('vehicle');
-        $queryAlerts = Alert::with('vehicle');
+            // 1. KPIs con lógica de tendencia
+            $dataCurrent = $this->getStatsByRange($curr['start'], $curr['end']);
+            $dataPrevious = $this->getStatsByRange($prev['start'], $prev['end']);
 
-        // 1️⃣ Filtro de Tiempo
-        if ($timeFilter === 'HOY') {
-            $queryTrips->whereDate('created_at', today());
-            $queryAlerts->whereDate('created_at', today());
-        } elseif ($timeFilter === 'MES') {
-            $queryTrips->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year);
-            $queryAlerts->whereMonth('created_at', now()->month)->whereYear('created_at', now()->year);
-        } elseif ($timeFilter === 'ANUAL') {
-            $queryTrips->whereYear('created_at', now()->year);
-            $queryAlerts->whereYear('created_at', now()->year);
+            // 2. Mapa de calor (Infracciones por Ruta)
+            $heatMapData = Alert::whereBetween('created_at', [$curr['start'], $curr['end']])
+                ->whereIn('type', ['EXCESO_VELOCIDAD', 'OVERSPEED'])
+                ->get()
+                ->map(function($a) {
+                    $addr = strtoupper($a->address ?? '');
+                    if (str_contains($addr, '11')) return 'Ruta 11';
+                    if (str_contains($addr, '81')) return 'Ruta 81';
+                    return 'Zonas Urbanas';
+                })->countBy()->map(fn($v, $k) => ['name' => $k, 'value' => $v])->values();
+
+            return response()->json([
+                'kpis' => [
+                    'trips' => ['val' => $dataCurrent['trips'], 'trend' => $this->trend($dataCurrent['trips'], $dataPrevious['trips'])],
+                    'cargo' => ['val' => round($dataCurrent['cargo'], 1), 'trend' => $this->trend($dataCurrent['cargo'], $dataPrevious['cargo'])],
+                    'speed' => ['val' => $dataCurrent['speed'], 'trend' => $this->trend($dataCurrent['speed'], $dataPrevious['speed'])],
+                    'efficiency' => ['val' => $dataCurrent['efficiency'], 'trend' => $this->trend($dataCurrent['efficiency'], $dataPrevious['efficiency'])],
+                    'maintenance' => Alert::where('type', 'AVERIA')->where('created_at', '>=', now()->subDays(30))->count()
+                ],
+                'cargoData' => $this->getDynamicHistory($time, $curr['start']),
+                'vehicleData' => $this->getVehicleStats($curr['start'], $curr['end']),
+                'incidentData' => [
+                    ['name' => 'Averías', 'value' => $dataCurrent['averias'], 'color' => '#EF4444'],
+                    ['name' => 'Logística', 'value' => $dataCurrent['fuel'], 'color' => '#F59E0B'],
+                ],
+                'heatMapData' => $heatMapData
+            ]);
+        } catch (\Exception $e) {
+            // Si algo falla, devolvemos error 500 con el mensaje para debuggear
+            return response()->json(['error' => $e->getMessage()], 500);
         }
+    }
 
-        // 2️⃣ Filtro de Ubicación
-        if ($location !== 'ALL') {
-            $queryTrips->where(function($q) use ($location) {
-                $q->where('origin', 'LIKE', "%{$location}%")->orWhere('destination', 'LIKE', "%{$location}%");
-            });
-            $queryAlerts->where('address', 'LIKE', "%{$location}%");
+    private function resolveRanges($time) {
+        $curr = ['end' => now()];
+        if ($time === 'SEMANA') { 
+            $curr['start'] = now()->startOfWeek(); 
+            $prev = ['start' => now()->subWeek()->startOfWeek(), 'end' => now()->subWeek()->endOfWeek()]; 
+        } elseif ($time === 'MES') { 
+            $curr['start'] = now()->startOfMonth(); 
+            $prev = ['start' => now()->subMonth()->startOfMonth(), 'end' => now()->subMonth()->endOfMonth()]; 
+        } elseif ($time === 'ANUAL') { 
+            $curr['start'] = now()->startOfYear(); 
+            $prev = ['start' => now()->subYear()->startOfYear(), 'end' => now()->subYear()->endOfYear()]; 
+        } else { 
+            $curr['start'] = now()->startOfDay(); 
+            $prev = ['start' => now()->subDay()->startOfDay(), 'end' => now()->subDay()->endOfDay()]; 
         }
+        return ['curr' => $curr, 'prev' => $prev];
+    }
 
-        // 3️⃣ KPIs Principales
-        // 🚀 AHORA SÍ: Contamos los viajes totales (en curso + finalizados) basándonos en los filtros actuales
-        $totalTrips = (clone $queryTrips)->count();
-
-        $completedTrips = (clone $queryTrips)->where('status', 'COMPLETADO')->count();
-        $totalCargo = (clone $queryTrips)->sum('cargo_weight');
-        $speedAlerts = (clone $queryAlerts)->where('type', 'EXCESO_VELOCIDAD')->count();
-        
-        $totalAlerts = (clone $queryAlerts)->count();
-        $delayAlerts = (clone $queryAlerts)->whereIn('type', ['AVERIA', 'SIN_COMBUSTIBLE'])->count();
-        $delayRate = $totalAlerts > 0 ? round(($delayAlerts / $totalAlerts) * 100, 1) : 0;
-
-        // 4️⃣ Gráfico de Dona (Causas de Retraso)
-        $incidentData = [
-            ['name' => 'Averías Mecánicas', 'value' => (clone $queryAlerts)->where('type', 'AVERIA')->count(), 'color' => '#EF4444'],
-            ['name' => 'Falta Combustible', 'value' => (clone $queryAlerts)->where('type', 'SIN_COMBUSTIBLE')->count(), 'color' => '#F59E0B'],
-            ['name' => 'Exceso Velocidad', 'value' => $speedAlerts, 'color' => '#3B82F6'],
+    private function getStatsByRange($start, $end) {
+        $trips = Trip::whereBetween('created_at', [$start, $end])->count();
+        $cargo = Trip::whereBetween('created_at', [$start, $end])->sum('cargo_weight');
+        return [
+            'trips' => $trips, 'cargo' => $cargo,
+            'speed' => Alert::whereBetween('created_at', [$start, $end])->where('type', 'EXCESO_VELOCIDAD')->count(),
+            'averias' => Alert::whereBetween('created_at', [$start, $end])->where('type', 'AVERIA')->count(),
+            'fuel' => Alert::whereBetween('created_at', [$start, $end])->whereIn('type', ['SIN_COMBUSTIBLE', 'LOW_FUEL'])->count(),
+            'efficiency' => $trips > 0 ? round($cargo / ($trips * 135), 2) : 0
         ];
-        $incidentData = array_values(array_filter($incidentData, fn($i) => $i['value'] > 0));
+    }
 
-        // 5️⃣ Gráfico de Barras (Carga por día)
-        $cargoData = (clone $queryTrips)->get()->groupBy(function($date) {
-            return Carbon::parse($date->created_at)->locale('es')->isoFormat('ddd'); 
-        })->map(function ($row, $key) {
-            return ['name' => ucfirst($key), 'toneladas' => round($row->sum('cargo_weight'), 1)];
-        })->values();
+    // 🚀 MEJORA: Agrupación DB-Agnostic (Funciona en MySQL, Postgres y SQLite)
+    private function getDynamicHistory($time, $start) {
+        $data = Trip::where('created_at', '>=', $start)->get();
 
-        // 6️⃣ Estadísticas por Vehículo (Carga y RETRASOS)
-        $vehicleData = (clone $queryTrips)->get()->groupBy('vehicle_id')->map(function ($trips, $vehicleId) {
-            $vehicle = $trips->first()->vehicle;
-            return [
-                'patente' => $vehicle ? $vehicle->license_plate : 'Desc.',
-                'viajes' => $trips->count(),
-                'carga' => round($trips->sum('cargo_weight'), 1),
-                'retrasos_minutos' => current($trips->pluck('delay_minutes')->toArray()) ? $trips->sum('delay_minutes') : rand(10, 120) // Agregamos un random temporal si es 0 para que veas el gráfico en acción
-            ];
-        })->values();
+        if ($time === 'ANUAL') {
+            return $data->groupBy(fn($d) => Carbon::parse($d->created_at)->isoFormat('MMM'))
+                ->map(fn($group, $key) => ['name' => $key, 'toneladas' => round($group->sum('cargo_weight'), 1)])->values();
+        } elseif ($time === 'HOY') {
+            return $data->groupBy(fn($d) => Carbon::parse($d->created_at)->format('H:00'))
+                ->map(fn($group, $key) => ['name' => $key, 'toneladas' => round($group->sum('cargo_weight'), 1)])->values();
+        }
 
-        return response()->json([
-            'kpis' => [
-                'totalTrips' => $totalTrips, // 👈 Enviamos la métrica correctamente
-                'completedTrips' => $completedTrips, 
-                'totalCargo' => round($totalCargo, 1), 
-                'delayRate' => $delayRate, 
-                'speedAlerts' => $speedAlerts
-            ],
-            'incidentData' => $incidentData,
-            'cargoData' => $cargoData,
-            'vehicleData' => $vehicleData 
-        ]);
+        return $data->groupBy(fn($d) => Carbon::parse($d->created_at)->isoFormat('DD/MM'))
+            ->map(fn($group, $key) => ['name' => $key, 'toneladas' => round($group->sum('cargo_weight'), 1)])->values();
+    }
+
+    private function trend($c, $p) { return ($p <= 0) ? 0 : round((($c - $p) / $p) * 100, 1); }
+
+    private function getVehicleStats($s, $e) {
+        return Trip::whereBetween('trips.created_at', [$s, $e])
+            ->whereNotNull('vehicle_id')
+            ->with('vehicle')
+            ->get()
+            ->groupBy('vehicle_id')
+            ->map(function($trips) {
+                return [
+                    'patente' => $trips->first()->vehicle->license_plate ?? 'S/P',
+                    'carga' => round($trips->sum('cargo_weight'), 1)
+                ];
+            })->values();
     }
 }

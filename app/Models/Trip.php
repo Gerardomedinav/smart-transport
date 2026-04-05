@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Traits\HasUuid;
+use App\Models\User;
 
 class Trip extends Model
 {
@@ -13,10 +14,9 @@ class Trip extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    // ¡Agregamos los destinos y el usuario aquí!
     protected $fillable = [
         'vehicle_id', 
-        'user_id',    // 🚨 AGREGADO: Relación con el chofer
+        'user_id',
         'start_time', 
         'end_time', 
         'status', 
@@ -28,19 +28,20 @@ class Trip extends Model
         'destination_lng'
     ];
 
-    public function locations()
-    {
-        return $this->hasMany(Location::class);
-    }
+    public function locations() { return $this->hasMany(Location::class); }
+    public function vehicle() { return $this->belongsTo(Vehicle::class); }
 
-    public function vehicle()
-    {
-        return $this->belongsTo(Vehicle::class);
-    }
-
-    // 🚨 ESTA ES LA FUNCIÓN QUE SOLUCIONA EL ERROR "RelationNotFoundException"
+    /**
+     * 👤 RELACIÓN INTELIGENTE:
+     * Intenta traer el chofer del viaje, si no hay, trae al asignado al vehículo.
+     */
     public function driver()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id')
+            ->withDefault(function ($user, $trip) {
+                // Si el viaje no tiene user_id, buscamos quién tiene este camión asignado
+                return User::where('vehicle_id', $trip->vehicle_id)->first() 
+                    ?? new User(['name' => 'Chofer no asignado']);
+            });
     }
 }

@@ -36,8 +36,8 @@ class UserController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => $request->role,
-            // 🛡️ Transformamos strings vacíos a NULL para que PostgreSQL (UUID) no falle
-            'vehicle_id' => ($request->role === 'operario' || empty($request->vehicle_id)) ? null : $request->vehicle_id,
+            // 🛡️ Si es operario o el campo viene vacío, forzamos NULL
+            'vehicle_id' => ($request->role === 'operario' || !$request->vehicle_id) ? null : $request->vehicle_id,
         ]);
 
         return back();
@@ -56,8 +56,7 @@ class UserController extends Controller
         $usuario->name = $request->name;
         $usuario->email = $request->email;
         $usuario->role = $request->role;
-        // 🛡️ Igual que arriba, evitamos strings vacíos
-        $usuario->vehicle_id = ($request->role === 'operario' || empty($request->vehicle_id)) ? null : $request->vehicle_id;
+        $usuario->vehicle_id = ($request->role === 'operario' || !$request->vehicle_id) ? null : $request->vehicle_id;
 
         if ($request->filled('password')) {
             $usuario->password = Hash::make($request->password);

@@ -14,18 +14,15 @@ class LocationUpdated implements ShouldBroadcastNow
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public $location;
-    public $address; // 👈 AGREGADO PARA EL MAPA
+    public $address;
 
     public function __construct(Location $location, $address = null)
     {
-        $this->location = $location->load('trip.vehicle');
-        $this->address = $address; // 👈 ASIGNADO
+        // 🚀 Carga vehículo y dispara la búsqueda automática del chofer
+        $this->location = $location->load(['trip.vehicle', 'trip.driver']);
+        $this->address = $address;
     }
 
-    public function broadcastOn(): array
-    {
-        return [new PrivateChannel('flota.seguimiento')];
-    }
-
+    public function broadcastOn(): array { return [new PrivateChannel('flota.seguimiento')]; }
     public function broadcastAs(): string { return 'location.updated'; }
 }
