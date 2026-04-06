@@ -1,43 +1,154 @@
-# 🚛 Smart Transport - Smart City Platform
-Desarrollado por [Gerardo Medina](https://www.linkedin.com/in/gerardomedinav/) **Técnico Analista en Diseño de Software**
-**Smart Transport** es un sistema de monitoreo y gestión de transporte urbano desarrollado bajo estándares de grado empresarial. El proyecto se enfoca en la trazabilidad inmutable de activos, optimización de logística y preparación para integración con Smart Contracts.
+# 🚚 Smart Transport - Centro de Control Logístico
+
+**Smart Transport** es una plataforma integral de gestión y monitoreo de flotas en tiempo real. Diseñada para transformar datos de telemetría en decisiones estratégicas, la plataforma optimiza la rentabilidad, mejora la seguridad vial y centraliza la comunicación operativa.
+
+Desarrollado en **Formosa, Argentina** por **Gerardo Medina Villalba**, combinando ingeniería de software (UTN/UNAF) con analítica de datos avanzada.
+
+---
+
+## 📸 Módulos Visuales del Sistema
+
+### 1. Experiencia de Bienvenida (Welcome)
+Interfaz inmersiva con animaciones 3D y scroll dinámico que presenta la potencia tecnológica de la flota.
+
+### 2. Acceso Translúcido (Login)
+Portal de inicio de sesión con estética *Glassmorphism* sobre fondo de video.
+
+### 3. Centro de Monitoreo (Mapa Real-Time)
+Rastreo satelital con identificación de conductores, velocidad en vivo y alertas críticas.
+
+### 4. Inteligencia de Negocios (Dashboard BI)
+Panel con métricas comparativas, tendencias, heatmaps y análisis avanzado.
+
+### 5. Control de Activos (Gestión de Personal)
+Gestión de conductores, vehículos y roles.
+
+---
 
 ## 🛠️ Stack Tecnológico
-* **Backend:** Laravel 12 (PHP 8.4)
-* **Base de Datos:** PostgreSQL
-* **Infraestructura:** Docker (Laravel Sail)
-* **Arquitectura de Datos:** * **UUIDs:** Identificadores únicos universales para mayor seguridad y escalabilidad.
-    * **Soft Deletes:** Borrado lógico para auditoría y persistencia de historial técnico.
-    * **Precisión GPS:** Uso de tipos `decimal` de alta fidelidad para coordenadas latitud/longitud.
 
-## 🚀 Características del Diseño
-1.  **Jerarquía de Entidades:** Estructura vinculada de Vehículos -> Viajes -> Localizaciones.
-2.  **API First:** Endpoints optimizados mediante *Eager Loading* para reducir la latencia en la carga de mapas.
-3.  **Dockerizado:** Entorno reproducible que garantiza el funcionamiento en cualquier servidor compatible con contenedores.
+- Laravel 11
+- React + Inertia + Tailwind
+- PostgreSQL
+- Docker
+- WebSockets (Reverb)
 
-## ⚙️ Instalación (Entorno de Desarrollo)
+---
+# 🚚 Smart Transport - Guía Completa de Instalación
 
-Para clonar y ejecutar este proyecto localmente, asegúrate de tener Docker instalado:
+## 🚀 Instalación paso a paso (Docker)
 
+### 1. Clonar repositorio
 ```bash
-# Clonar el repositorio
-git clone [https://github.com/Gerardomedinav/smart-transport.git](https://github.com/Gerardomedinav/smart-transport.git)
-
-# Entrar al directorio
+git clone https://github.com/Gerardomedinav/smart-transport.git
 cd smart-transport
+```
 
-# Instalar dependencias
-docker run --rm \
-    -u "$(id -u):$(id -g)" \
-    -v "$(pwd):/var/www/html" \
-    -w /var/www/html \
-    laravelsail/php84-composer:latest \
-    composer install --ignore-platform-reqs
+### 2. Configurar entorno
+```bash
+cp .env.example .env
+```
 
-# Levantar contenedores
-./vendor/bin/sail up -d
+### 3. Levantar contenedores
+```bash
+docker compose up -d --build
+```
 
-# Ejecutar migraciones
-./vendor/bin/sail artisan migrate
+---
 
- 
+## ⚙️ Configuración Backend (Laravel)
+
+### Instalar dependencias PHP
+```bash
+docker compose exec laravel.test composer install
+```
+
+### Generar APP KEY
+```bash
+docker compose exec laravel.test php artisan key:generate
+```
+
+### Ejecutar migraciones
+```bash
+docker compose exec laravel.test php artisan migrate
+```
+
+---
+
+## 🎨 Configuración Frontend
+
+### Instalar dependencias
+```bash
+docker compose exec laravel.test npm install
+```
+
+### Compilar assets
+```bash
+docker compose exec laravel.test npm run build
+```
+
+Modo desarrollo:
+```bash
+docker compose exec laravel.test npm run dev
+```
+
+---
+
+## 📦 Datos Iniciales
+
+### Cargar flota
+```bash
+docker compose exec laravel.test php artisan fleet:load
+```
+
+### Crear usuario admin
+```bash
+docker compose exec laravel.test php artisan system:create-admin
+```
+
+---
+
+## 🛰️ Tiempo Real
+
+### Simulación GPS
+```bash
+docker compose exec laravel.test php artisan fleet:gps
+```
+
+### WebSockets
+```bash
+docker compose exec laravel.test php artisan reverb:start --host=0.0.0.0 --port=8081 --debug
+```
+
+---
+
+## 🔧 Mantenimiento
+
+### Limpiar cache
+```bash
+docker compose exec laravel.test php artisan optimize:clear
+```
+
+### Permisos (Linux)
+```bash
+docker compose exec laravel.test chmod -R 775 storage bootstrap/cache
+```
+
+### Ver logs
+```bash
+docker compose logs -f
+```
+
+---
+
+## 🌐 Acceso
+
+- App: http://localhost
+- WebSockets: ws://localhost:8081
+
+---
+
+## 👤 Autor
+
+Gerardo Medina Villalba  
+Formosa, Argentina - 2026

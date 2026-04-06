@@ -220,7 +220,7 @@ export default function Welcome({ auth }) {
                                 © 2026 Smart Transport | Formosa, Argentina
                             </p>
                             <a 
-                                href="https://www.linkedin.com/in/gerardo-medina-villalba-846174241/" 
+                                href="https://www.linkedin.com/in/gerardomedinav/" 
                                 target="_blank" 
                                 className="text-slate-300 hover:text-blue-400 transition-colors text-[11px] font-bold uppercase tracking-wider"
                             >
