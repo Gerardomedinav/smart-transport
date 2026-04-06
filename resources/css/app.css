@@ -1,3 +1,69 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+:root {
+    --bg-dark: #020617;
+    --text-light: #ffffff;
+    --silver-plate: #bdc3c7;
+}
+
+body {
+    background-color: var(--bg-dark);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+/* El Canvas con un leve zoom para ocultar bordes con logos */
+#truck-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 1;
+    pointer-events: none;
+    transform: scale(1.08); /* Aumentado para asegurar que tape marcas de agua */
+}
+
+/* Botón de WhatsApp para tapar logos de la esquina */
+.whatsapp-btn {
+    position: fixed;
+    bottom: 0px; 
+    right: 0px;  
+    z-index: 1000;
+    background-color: var(--silver-plate);
+    color: #0f172a;
+    width: 85px; /* Un poco más grande para ser un parche efectivo */
+    height: 85px;
+    border-radius: 50% 0 0 0; /* Forma de esquina */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: -5px -5px 30px rgba(0,0,0,0.5);
+    transition: all 0.3s ease;
+}
+
+.whatsapp-btn:hover {
+    background-color: #ffffff;
+    transform: scale(1.05);
+}
+
+/* Navbar traslúcido */
+.nav-glass {
+    background: rgba(2, 6, 23, 0.4);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Footer al final de la ruta de scroll */
+.site-footer {
+    position: relative;
+    z-index: 100;
+    background: #020617;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 4rem 0;
+    width: 100%;
+}

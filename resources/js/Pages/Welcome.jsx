@@ -1,144 +1,234 @@
 import { Head, Link } from '@inertiajs/react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import WelcomeLoader from '@/Components/WelcomeLoader';
 import WelcomeNavbar from '@/Components/WelcomeNavbar';
 
 export default function Welcome({ auth }) {
-    const [darkMode, setDarkMode] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const canvasRef = useRef(null);
+    const imagesRef = useRef([]);
 
     useEffect(() => {
-        // Sincronización del tema visual
-        if (darkMode) {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-
-        // Control del estado de carga inicial
-        const timer = setTimeout(() => {
-            setIsLoading(false);
-        }, 2500);
-
+        const timer = setTimeout(() => setIsLoading(false), 2500);
         return () => clearTimeout(timer);
-    }, [darkMode]);
+    }, []);
 
-    const toggleDarkMode = () => setDarkMode(!darkMode);
+    useEffect(() => {
+        if (isLoading) return;
+
+        const loadScripts = async () => {
+            const scripts = [
+                "https://cdn.jsdelivr.net/npm/lenis@1/dist/lenis.min.js",
+                "https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js",
+                "https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"
+            ];
+
+            for (const src of scripts) {
+                if (!document.querySelector(`script[src="${src}"]`)) {
+                    await new Promise((resolve) => {
+                        const script = document.createElement("script");
+                        script.src = src;
+                        script.async = true;
+                        script.onload = resolve;
+                        document.body.appendChild(script);
+                    });
+                }
+            }
+            initExperience();
+        };
+
+        const initExperience = () => {
+            const gsap = window.gsap;
+            const ScrollTrigger = window.ScrollTrigger;
+            const Lenis = window.Lenis;
+            gsap.registerPlugin(ScrollTrigger);
+
+            const lenis = new Lenis({ duration: 1.2, smoothWheel: true });
+            function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
+            requestAnimationFrame(raf);
+
+            const canvas = canvasRef.current;
+            const ctx = canvas.getContext("2d");
+            const totalFrames = 180;
+            const scrollObj = { frame: 0 };
+
+            const render = (index) => {
+                const img = imagesRef.current[Math.floor(index)];
+                if (!img) return;
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                const scale = Math.max(canvas.width / img.width, canvas.height / img.height) * 0.9;
+                const sw = img.width * scale;
+                const sh = img.height * scale;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, (canvas.width - sw) / 2, (canvas.height - sh) / 2, sw, sh);
+            };
+
+            for (let i = 1; i <= totalFrames; i++) {
+                const img = new Image();
+                img.src = `/assets/frames/frame_${i.toString().padStart(4, '0')}.webp`;
+                img.onload = () => { if (i === 1) render(0); };
+                imagesRef.current.push(img);
+            }
+
+            gsap.to(scrollObj, {
+                frame: totalFrames - 1,
+                ease: "none",
+                scrollTrigger: {
+                    trigger: "#scroll-container",
+                    start: "top top",
+                    end: "bottom bottom",
+                    scrub: 0.5,
+                    onUpdate: () => render(scrollObj.frame)
+                }
+            });
+
+            gsap.to("#hero-fixed-content", {
+                opacity: 0,
+                scale: 0.8,
+                y: -100,
+                scrollTrigger: {
+                    trigger: "#scroll-container",
+                    start: "top top",
+                    end: "10% top",
+                    scrub: true,
+                }
+            });
+
+            gsap.utils.toArray(".scroll-section").forEach((section) => {
+                gsap.from(section.querySelector(".section-inner"), {
+                    opacity: 0,
+                    x: -50,
+                    duration: 1.2,
+                    scrollTrigger: {
+                        trigger: section,
+                        start: "top 70%",
+                        toggleActions: "play reverse play reverse"
+                    }
+                });
+            });
+        };
+
+        loadScripts();
+    }, [isLoading]);
 
     return (
         <>
-            <Head title="Smart Transport - Control de Flotas" />
+            <Head title="Smart Transport | Soluciones Logísticas de Vanguardia" />
             
-            {/* Definición global de animaciones core */}
-            <style>
-                {`
-                    @keyframes bus-entry {
-                        0% { transform: translateX(-150vw); opacity: 0; }
-                        60% { transform: translateX(20px); opacity: 1; }
-                        100% { transform: translateX(0); opacity: 1; }
-                    }
-                    @keyframes pulse-soft {
-                        0%, 100% { opacity: 1; transform: scale(1); }
-                        50% { opacity: 0.8; transform: scale(1.05); }
-                    }
-                    .animate-bus { animation: bus-entry 1.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-                    .animate-pulse-logo { animation: pulse-soft 2s infinite ease-in-out; }
-                `}
-            </style>
+            {isLoading && <WelcomeLoader />}
 
-            {/* Componente 1: Pantalla de carga independiente */}
-            {isLoading && <WelcomeLoader darkMode={darkMode} />}
-
-            <div className={`min-h-screen transition-colors duration-500 ${darkMode ? 'bg-slate-900 text-white' : 'bg-white text-gray-900'} font-sans ${isLoading ? 'overflow-hidden' : ''}`}>
+            <div className="bg-[#020617] text-white selection:bg-blue-500 overflow-x-hidden">
                 
-                {/* Componente 2: Barra de navegación refactorizada */}
-                <WelcomeNavbar 
-                    darkMode={darkMode} 
-                    toggleDarkMode={toggleDarkMode} 
-                    auth={auth} 
-                    isLoading={isLoading} 
-                />
+                {/* 🧭 NAVBAR TRANSLÚCIDO (Estilo Vidrio) */}
+                <div className="fixed top-0 left-0 w-full z-[100] bg-slate-950/40 backdrop-blur-md border-b border-white/5">
+                    <WelcomeNavbar auth={auth} />
+                </div>
 
-                {/* Hero Section principal */}
-                <header className="relative min-h-[90vh] flex items-center overflow-hidden">
-                    <div className="absolute inset-0 z-0">
-                        <video 
-                            autoPlay 
-                            muted 
-                            loop 
-                            playsInline 
-                            className={`w-full h-full object-cover transition-opacity duration-1000 ${darkMode ? 'opacity-30 grayscale' : 'opacity-50'}`}
-                        >
-                            <source src="/images/formosa1.webm" type="video/webm" />
-                        </video>
-                        <div className={`absolute inset-0 ${darkMode ? 'bg-gradient-to-r from-slate-900 via-slate-900/60 to-transparent' : 'bg-gradient-to-r from-white via-white/60 to-transparent'}`}></div>
+                {/* Camión de fondo */}
+                <div className="fixed inset-0 z-0 pointer-events-none">
+                    <canvas ref={canvasRef} id="truck-canvas" className="opacity-60" />
+                </div>
+
+                {/* 🟢 WHATSAPP SOPORTE */}
+                <a 
+                    href="https://wa.me/5493704857048" 
+                    target="_blank" 
+                    className="fixed bottom-8 right-8 z-[300] flex items-center gap-3 bg-green-500 hover:bg-green-600 p-4 rounded-3xl shadow-[0_15px_40px_rgba(34,197,94,0.6)] transition-all active:scale-95 border-2 border-white/20"
+                >
+                    <div className="absolute inset-0 bg-green-500 rounded-3xl animate-ping opacity-25"></div>
+                    <span className="text-[11px] font-black uppercase tracking-widest text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                       
+                    </span>
+                    <svg className="w-8 h-8 fill-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]" viewBox="0 0 24 24">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.246 2.248 3.484 5.232 3.484 8.412-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.309 1.656zm6.222-4.032c1.503.893 3.129 1.364 4.791 1.365 5.013 0 9.088-4.075 9.091-9.088.002-2.428-.943-4.711-2.662-6.43s-4.002-2.664-6.43-2.664c-5.013 0-9.086 4.075-9.089 9.088-.001 1.735.499 3.426 1.446 4.888l-1.048 3.827 3.922-1.029z"/>
+                    </svg>
+                </a>
+
+                {/* Hero inicial */}
+                <div id="hero-fixed-content" className="fixed inset-0 z-10 flex items-center px-12 pointer-events-none">
+                    <div className="max-w-7xl">
+                        <span className="text-blue-500 font-black tracking-[0.6em] uppercase text-sm mb-4 block drop-shadow-[0_2px_10px_rgba(37,99,235,0.6)]">Formosa · Argentina</span>
+                        <h1 className="text-[10rem] font-black leading-[0.8] tracking-tighter mb-6 drop-shadow-[0_15px_40px_rgba(0,0,0,0.9)]">
+                            SMART<br/><span className="text-blue-600 drop-shadow-[0_0_30px_rgba(37,99,235,0.5)]">TRUCK</span>
+                        </h1>
+                        <p className="text-xl text-slate-200 font-bold tracking-wide max-w-lg drop-shadow-[0_2px_10px_rgba(0,0,0,1)]">
+                            Ingeniería aplicada a la gestión de flotas.
+                        </p>
                     </div>
+                </div>
 
-                    <div className="relative z-10 max-w-7xl mx-auto px-6 grid lg:grid-cols-2 gap-12 items-center w-full">
-                        <div className="text-left">
-                            <span className={`inline-block px-4 py-1.5 mb-6 text-sm font-bold tracking-wider uppercase rounded-full ${darkMode ? 'bg-blue-900/30 text-blue-400' : 'bg-blue-50 text-blue-600'}`}>
-                                Logística 4.0 & Monitoreo
-                            </span>
-                            <h1 className="text-5xl lg:text-7xl font-extrabold leading-tight mb-8">
-                                Gestión de transporte <span className="text-blue-600">inteligente y dinámico.</span>
-                            </h1>
-                            <p className={`text-lg mb-10 max-w-lg leading-relaxed ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                                Plataforma profesional de seguimiento satelital diseñada para visualizar su flota en tiempo real con tecnología de alta precisión.
+                <main id="scroll-container" className="relative z-20 min-h-[1000vh] bg-transparent">
+                    <div className="h-[120vh]"></div>
+
+                    {/* SECCIONES DE FUNCIONALIDADES */}
+                    <section className="scroll-section h-screen flex items-center px-24 relative">
+                        <div className="section-inner max-w-2xl bg-slate-950/60 p-10 rounded-3xl border-2 border-white/10 backdrop-blur-2xl shadow-2xl">
+                            <span className="text-blue-500 font-black tracking-widest block mb-4 uppercase drop-shadow-md">01 / Rastreo Satelital</span>
+                            <h2 className="text-7xl font-black mb-6 drop-shadow-lg text-white">Mapa en Vivo</h2>
+                            <p className="text-slate-100 text-lg leading-relaxed drop-shadow-md font-medium">
+                                Visualización en tiempo real de cada unidad con telemetría integrada.
+                                <span className="block mt-4 text-blue-400 font-black italic">Geocercas activas y alertas de desvío de ruta.</span>
                             </p>
-                            <div className="flex flex-wrap gap-4">
-                                <Link href={route('register')} className={`px-8 py-4 rounded-xl font-bold transition shadow-lg ${darkMode ? 'bg-white text-slate-900 hover:bg-gray-200' : 'bg-gray-900 text-white hover:bg-gray-800'}`}>
-                                    Explorar Soluciones
-                                </Link>
-                                <button className={`px-8 py-4 border-2 rounded-xl font-bold transition ${darkMode ? 'border-slate-700 text-gray-300 hover:bg-slate-800' : 'border-gray-200 text-gray-700 hover:bg-gray-50'}`}>
-                                    Ver Demo en Vivo
-                                </button>
-                            </div>
                         </div>
-                        <div className="relative">
-                            <div className={`absolute -top-20 -right-20 w-96 h-96 rounded-full blur-3xl opacity-50 ${darkMode ? 'bg-blue-900/40' : 'bg-blue-100'}`}></div>
-                            <img 
-                                src="/images/imagen1.jpg" 
-                                alt="Gestión de Flotas" 
-                                className={`relative rounded-3xl shadow-2xl border-8 transition-colors duration-500 ${darkMode ? 'border-slate-800' : 'border-white'} object-cover h-[500px] w-full`} 
-                            />
+                    </section>
+
+                    <section className="scroll-section h-screen flex items-center justify-end px-24">
+                        <div className="section-inner max-w-2xl bg-slate-950/60 p-10 rounded-3xl border-2 border-white/10 backdrop-blur-2xl shadow-2xl">
+                            <span className="text-blue-500 font-black tracking-widest block mb-4 uppercase drop-shadow-md">02 / Business Intelligence</span>
+                            <h2 className="text-7xl font-black mb-6 drop-shadow-lg text-white">Analytics Pro</h2>
+                            <p className="text-slate-100 text-lg leading-relaxed drop-shadow-md font-medium">
+                                Transforme datos masivos en decisiones de alta rentabilidad.
+                                <span className="block mt-4 text-blue-400 font-black italic">Análisis comparativo de eficiencia y mapas de calor.</span>
+                            </p>
+                        </div>
+                    </section>
+
+                    {/* 👤 SECCIÓN: ¿QUIÉNES SOMOS? (GERARDO MEDINA) */}
+                    <section className="scroll-section h-screen flex items-center px-24">
+                        <div className="section-inner max-w-3xl bg-slate-950/60 p-10 rounded-3xl border-2 border-blue-500/20 backdrop-blur-2xl shadow-2xl">
+                            <span className="text-blue-500 font-black tracking-widest block mb-4 uppercase drop-shadow-md">03 / El Desarrollador</span>
+                            <h2 className="text-6xl font-black mb-6 drop-shadow-xl text-white">Ingeniería Local</h2>
+                            <p className="text-slate-100 text-xl leading-relaxed drop-shadow-md font-medium mb-4">
+                                Smart Transport es un ecosistema diseñado y desarrollado por <span className="text-blue-400 font-black">Gerardo Medina Villalba</span>.
+                            </p>
+                            <p className="text-slate-300 text-lg leading-relaxed drop-shadow-md">
+                                Técnico Universitario en Programación (UTN) y Analista de Sistemas (UNAF), Gerardo combina su experiencia como Backend Developer con analítica de datos para ofrecer soluciones robustas que potencian la logística en Formosa.
+                            </p>
+                        </div>
+                    </section>
+
+                    {/* 🚀 CTA FINAL: MÁS COMPACTO Y PEGADO AL FOOTER */}
+                    <div className="h-[50vh] flex flex-col items-center justify-center relative px-6">
+                        <div className="absolute inset-0 bg-blue-600/5 backdrop-blur-sm"></div>
+                        <div className="z-10 text-center flex flex-col items-center">
+                            <h2 className="text-5xl md:text-7xl font-black mb-10 tracking-tighter drop-shadow-[0_10px_30px_rgba(0,0,0,1)] uppercase">Potencie su Flota Hoy</h2>
+                            
+                            <Link href={route('login')} className="w-fit group relative bg-blue-600 px-12 py-6 rounded-full text-2xl font-black hover:bg-blue-500 transition-all shadow-[0_25px_60px_rgba(37,99,235,0.6)] flex items-center gap-6 border-2 border-blue-400/50">
+                                <span className="drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] uppercase">Iniciar Operación</span>
+                                <span className="group-hover:translate-x-3 transition-transform drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">→</span>
+                            </Link>
                         </div>
                     </div>
-                </header>
+                </main>
 
-                {/* Sección de Beneficios */}
-                <section className={`py-24 transition-colors duration-500 ${darkMode ? 'bg-slate-800/50' : 'bg-gray-50'}`}>
-                    <div className="max-w-7xl mx-auto px-6 text-left">
-                        <div className="grid md:grid-cols-3 gap-12">
-                            {[
-                                { title: "Rastreo Satelital", desc: "Localización precisa mediante integración directa con GPS y WebSockets.", color: "bg-blue-600", icon: "M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" },
-                                { title: "Análisis de Datos", desc: "Estructura optimizada en PostgreSQL para auditoría técnica impecable.", color: "bg-green-500", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2" },
-                                { title: "Alta Disponibilidad", desc: "Arquitectura backend que garantiza el flujo constante de información.", color: "bg-purple-500", icon: "M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" }
-                            ].map((item, idx) => (
-                                <div key={idx} className={`p-8 rounded-2xl shadow-sm border transition-all duration-300 hover:shadow-md ${darkMode ? 'bg-slate-900 border-slate-700' : 'bg-white border-gray-100'}`}>
-                                    <div className={`w-12 h-12 ${item.color} rounded-lg flex items-center justify-center mb-6 text-white`}>
-                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
-                                        </svg>
-                                    </div>
-                                    <h3 className={`text-xl font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>{item.title}</h3>
-                                    <p className={darkMode ? 'text-gray-400' : 'text-gray-600'}>{item.desc}</p>
-                                </div>
-                            ))}
+                {/* FOOTER CON LINKEDIN */}
+                <footer className="relative z-30 bg-slate-950 border-t border-white/5 py-10 backdrop-blur-md">
+                    <div className="max-w-7xl mx-auto px-12 flex flex-col md:flex-row justify-between items-center gap-6">
+                        <div className="text-center md:text-left">
+                            <p className="text-slate-500 tracking-widest uppercase text-[10px] font-black drop-shadow-sm mb-1">
+                                © 2026 Smart Transport | Formosa, Argentina
+                            </p>
+                            <a 
+                                href="https://www.linkedin.com/in/gerardo-medina-villalba-846174241/" 
+                                target="_blank" 
+                                className="text-slate-300 hover:text-blue-400 transition-colors text-[11px] font-bold uppercase tracking-wider"
+                            >
+                                Gerardo Medina - Técnico Analista y Programador
+                            </a>
                         </div>
-                    </div>
-                </section>
-
-                {/* Footer Profesional */}
-                <footer className={`py-12 border-t transition-colors duration-500 ${darkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-gray-100'}`}>
-                    <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6 text-left">
-                        <div className="flex items-center gap-4 text-sm">
-                            <span className="text-gray-500">© 2026 Smart Transport</span>
-                            <span className="text-gray-300">|</span>
-                            <span className="text-gray-500">Diseñado por</span>
-                            <a href="https://www.linkedin.com/in/gerardomedinav/" target="_blank" className="font-bold text-blue-600 hover:text-blue-800 transition-all">Gerardo Medina</a>
-                        </div>
-                        <div className="text-xs font-semibold tracking-widest uppercase text-gray-400">
-                            Técnico Analista en Diseño de Software
+                        <div className="text-[10px] font-black text-blue-500 uppercase tracking-widest">
+                            Software de Precisión Logística
                         </div>
                     </div>
                 </footer>
